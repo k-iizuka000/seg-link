@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import axios from 'axios';
 
 @Injectable()
 export class AuthService {
@@ -96,12 +97,16 @@ export class AuthService {
   }
 
   async exchangeStravaCode(code: string) {
-    // TODO: Implement actual Strava API call to exchange code for tokens
-    // For now, return mock tokens
-    return {
-      access_token: 'mock_access_token',
-      refresh_token: 'mock_refresh_token',
-      expires_in: 21600,
-    };
+    const response = await axios.post('https://www.strava.com/oauth/token', null, {
+      params: {
+        client_id: process.env.STRAVA_CLIENT_ID,
+        client_secret: process.env.STRAVA_CLIENT_SECRET,
+        code: code,
+        grant_type: 'authorization_code'
+      }
+    });
+    const { access_token, refresh_token } = response.data;
+    // TODO: Store tokens in the database
+    return { access_token, refresh_token };
   }
 }
