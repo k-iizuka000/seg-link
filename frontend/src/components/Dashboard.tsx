@@ -1,6 +1,26 @@
-// import React from 'react';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 
 function Dashboard() {
+  const [activities, setActivities] = useState([]);
+  const [profile, setProfile] = useState({});
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const activitiesResponse = await axios.get('/api/activities/recent');
+        setActivities(activitiesResponse.data);
+
+        const profileResponse = await axios.get('/api/user/profile');
+        setProfile(profileResponse.data);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   return (
     <div style={{ padding: '20px' }}>
       <h1>ダッシュボード</h1>
@@ -15,7 +35,14 @@ function Dashboard() {
       </nav>
       <section>
         <h2>最近のアクティビティ</h2>
-        <p>最近のライド要約やセグメント一覧を表示します。</p>
+        <ul>
+          {activities.map((activity, index) => (
+            <li key={index}>{activity.title} - {activity.distance} km</li>
+          ))}
+        </ul>
+        <h2>プロフィール</h2>
+        <p>名前: {profile.name}</p>
+        <p>体重: {profile.weight} kg</p>
       </section>
     </div>
   );
