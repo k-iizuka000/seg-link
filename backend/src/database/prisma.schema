@@ -1,0 +1,123 @@
+// This is your Prisma schema file
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  name          String?
+  avatarUrl     String?
+  bio           String?
+  location      String?
+  weight        Float?
+  height        Float?
+  birthDate     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  stravaAuth    StravaAuth?
+  activities    Activity[]
+  goals         Goal[]
+  
+  @@map("users")
+}
+
+model StravaAuth {
+  id              String    @id @default(uuid())
+  userId          String    @unique
+  user            User      @relation(fields: [userId], references: [id])
+  accessToken     String
+  refreshToken    String
+  expiresAt       DateTime
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  athleteId       Int
+  firstName       String?
+  lastName        String?
+  profileMedium   String?
+  profile         String?
+  city            String?
+  state           String?
+  country         String?
+  sex             String?
+  premium         Boolean
+  summit          Boolean
+  createdAtStrava DateTime
+  updatedAtStrava DateTime
+  badgeTypeId     Int
+  weight          Float?
+  
+  @@map("strava_auths")
+}
+
+model Activity {
+  id              String    @id @default(uuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+  stravaId        BigInt
+  name            String
+  distance        Float
+  movingTime      Int
+  elapsedTime     Int
+  totalElevationGain Float
+  type            String
+  startDate       DateTime
+  startDateLocal  DateTime
+  timezone        String
+  utcOffset       Int
+  locationCity    String?
+  locationState   String?
+  locationCountry String?
+  achievementCount Int
+  kudosCount      Int
+  commentCount    Int
+  athleteCount    Int
+  photoCount      Int
+  mapId           String?
+  trainer         Boolean
+  commute         Boolean
+  manual          Boolean
+  private         Boolean
+  visibility      String
+  flagged         Boolean
+  gearId          String?
+  averageSpeed    Float
+  maxSpeed        Float
+  averageCadence  Float?
+  averageTemp     Float?
+  averageWatts    Float?
+  weightedAverageWatts Float?
+  kilojoules      Float?
+  deviceWatts     Boolean
+  hasHeartrate    Boolean
+  averageHeartrate Float?
+  maxHeartrate    Float?
+  elevHigh        Float?
+  elevLow         Float?
+  prCount         Int
+  totalPhotoCount Int
+  hasKudoed       Boolean
+  
+  @@map("activities")
+}
+
+model Goal {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  type        String
+  targetValue Float
+  startDate   DateTime
+  endDate     DateTime
+  progress    Float
+  completed   Boolean
+  
+  @@map("goals")
+}

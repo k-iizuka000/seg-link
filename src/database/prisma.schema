@@ -1,0 +1,90 @@
+// This is your Prisma schema file
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// TODO: QA.md - DB-001: Confirm database schema design
+model User {
+  id                  String    @id @default(uuid())
+  email               String    @unique
+  name                String?
+  stravaId            String    @unique
+  stravaAccessToken   String?
+  stravaRefreshToken  String?
+  stravaTokenUpdatedAt DateTime?
+  weight              Float?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  activities          Activity[]
+  templates           Template[]
+}
+
+// TODO: QA.md - DB-002: Add additional activity metrics
+model Activity {
+  id          String   @id @default(uuid())
+  stravaId    String   @unique
+  userId      String
+  name        String
+  distance    Float
+  movingTime  Int
+  totalTime   Int
+  startDate   DateTime
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id])
+  segments    ActivitySegment[]
+}
+
+// TODO: QA.md - DB-003: Expand segment performance metrics
+model Segment {
+  id          String   @id @default(uuid())
+  stravaId    String   @unique
+  name        String
+  distance    Float
+  avgGrade    Float
+  maxGrade    Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  activities  ActivitySegment[]
+}
+
+// TODO: QA.md - DB-004: Add template customization options
+model Template {
+  id          String   @id @default(uuid())
+  userId      String
+  name        String
+  clothing    Json?    // 服装情報
+  wheels      Json?    // ホイール情報
+  weather     Json?    // 天候情報
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+// TODO: QA.md - DB-005: Add activity and segment relationship
+model ActivitySegment {
+  id          String   @id @default(uuid())
+  activityId  String
+  segmentId   String
+  elapsedTime Int
+  movingTime  Int
+  startDate   DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  activity    Activity @relation(fields: [activityId], references: [id])
+  segment     Segment  @relation(fields: [segmentId], references: [id])
+
+  @@unique([activityId, segmentId])
+}
