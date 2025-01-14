@@ -1,15 +1,15 @@
 import React from 'react';
 import axios from 'axios';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 function Logout() {
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const handleLogout = async () => {
     try {
       await axios.post('/auth/logout');
       alert('ログアウトしました');
-      history.push('/login');
+      navigate('/login');
     } catch (error) {
       console.error('Error logging out:', error);
     }
