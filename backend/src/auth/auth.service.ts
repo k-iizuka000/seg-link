@@ -105,8 +105,9 @@ export class AuthService {
         grant_type: 'authorization_code'
       }
     });
-    const { access_token, refresh_token } = response.data;
-    // TODO: Store tokens in the database
+    const { access_token, refresh_token, athlete } = response.data;
+    // Store tokens in the database
+    await this.storeStravaTokens(athlete.id.toString(), access_token, refresh_token);
     return { access_token, refresh_token };
   }
 }
