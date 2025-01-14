@@ -1,9 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
+interface Activity {
+  title: string;
+  distance: number;
+}
+
+interface Profile {
+  name: string;
+  weight: number;
+}
+
 function Dashboard() {
-  const [activities, setActivities] = useState([]);
-  const [profile, setProfile] = useState({});
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [profile, setProfile] = useState<Profile>({ name: '', weight: 0 });
 
   useEffect(() => {
     const fetchData = async () => {
