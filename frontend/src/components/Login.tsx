@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import styled from 'styled-components';
-import { mediaQueries } from '../styles/breakpoints';
 
 const LoginContainer = styled.div`
   display: flex;
@@ -82,10 +81,9 @@ const ErrorMessage = styled.div`
 interface LoginProps {
   isLoading?: boolean;
   error?: string;
-  onLogin: () => void;
 }
 
-const Login: React.FC<LoginProps> = ({ isLoading, error, onLogin }) => {
+const Login: React.FC<LoginProps> = ({ isLoading, error }) => {
   const handleStravaLogin = () => {
     // Stravaの認証URLにリダイレクト
     const clientId = process.env.REACT_APP_STRAVA_CLIENT_ID;
@@ -94,6 +92,15 @@ const Login: React.FC<LoginProps> = ({ isLoading, error, onLogin }) => {
     
     window.location.href = `https://www.strava.com/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}`;
   };
+
+  // ログイン状態の永続化
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      // トークンが存在する場合、ユーザーをダッシュボードにリダイレクト
+      window.location.href = '/dashboard';
+    }
+  }, []);
 
   return (
     <LoginContainer>

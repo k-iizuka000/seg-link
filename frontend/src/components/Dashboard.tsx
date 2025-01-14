@@ -1,61 +1,84 @@
-import { useEffect, useState } from 'react';
-import axios from 'axios';
+import React from 'react';
+import styled from 'styled-components';
 
-interface Activity {
-  title: string;
-  distance: number;
-}
+const DashboardContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  background-color: #f5f5f5;
+`;
 
-interface Profile {
-  name: string;
-  weight: number;
-}
+const ActivityCard = styled.div`
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 600px;
+  margin-bottom: 1rem;
+`;
 
-function Dashboard() {
-  const [activities, setActivities] = useState<Activity[]>([]);
-  const [profile, setProfile] = useState<Profile>({ name: '', weight: 0 });
+const QuickAccessButton = styled.button`
+  background-color: #007bff;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin: 0.5rem;
+  transition: background-color 0.2s;
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const activitiesResponse = await axios.get('/api/activities/recent');
-        setActivities(activitiesResponse.data);
+  &:hover {
+    background-color: #0056b3;
+  }
+`;
 
-        const profileResponse = await axios.get('/api/user/profile');
-        setProfile(profileResponse.data);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    };
+const SkeletonUI = styled.div`
+  width: 100%;
+  max-width: 600px;
+  height: 150px;
+  background-color: #e0e0e0;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  animation: pulse 1.5s infinite ease-in-out;
 
-    fetchData();
-  }, []);
+  @keyframes pulse {
+    0% {
+      background-color: #e0e0e0;
+    }
+    50% {
+      background-color: #f0f0f0;
+    }
+    100% {
+      background-color: #e0e0e0;
+    }
+  }
+`;
+
+const Dashboard: React.FC = () => {
+  const isLoading = false; // データ読み込み中の状態を管理
 
   return (
-    <div style={{ padding: '20px' }}>
+    <DashboardContainer>
       <h1>ダッシュボード</h1>
-      <nav style={{ marginBottom: '20px' }}>
-        <ul style={{ listStyleType: 'none', padding: 0 }}>
-          <li style={{ display: 'inline', marginRight: '10px' }}><a href="/segments">Myセグメント一覧</a></li>
-          <li style={{ display: 'inline', marginRight: '10px' }}><a href="/search">複合検索</a></li>
-          <li style={{ display: 'inline', marginRight: '10px' }}><a href="/templates">テンプレート管理</a></li>
-          <li style={{ display: 'inline', marginRight: '10px' }}><a href="/profile">プロフィール</a></li>
-          <li style={{ display: 'inline', marginRight: '10px' }}><a href="/logout">ログアウト</a></li>
-        </ul>
-      </nav>
-      <section>
-        <h2>最近のアクティビティ</h2>
-        <ul>
-          {activities.map((activity, index) => (
-            <li key={index}>{activity.title} - {activity.distance} km</li>
-          ))}
-        </ul>
-        <h2>プロフィール</h2>
-        <p>名前: {profile.name}</p>
-        <p>体重: {profile.weight} kg</p>
-      </section>
-    </div>
+      {isLoading ? (
+        <SkeletonUI />
+      ) : (
+        <ActivityCard>
+          <h2>最近のアクティビティ</h2>
+          <p>アクティビティの詳細情報をここに表示します。</p>
+        </ActivityCard>
+      )}
+
+      <div>
+        <QuickAccessButton>Myセグメント一覧</QuickAccessButton>
+        <QuickAccessButton>複合条件検索</QuickAccessButton>
+        <QuickAccessButton>テンプレート管理</QuickAccessButton>
+        <QuickAccessButton>プロフィール</QuickAccessButton>
+      </div>
+    </DashboardContainer>
   );
-}
+};
 
 export default Dashboard; 

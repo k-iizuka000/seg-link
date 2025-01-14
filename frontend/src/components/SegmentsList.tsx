@@ -1,63 +1,114 @@
-import { useEffect, useState } from 'react';
-import axios from 'axios';
+import React, { useState } from 'react';
+import styled from 'styled-components';
 
-interface Segment {
-  name: string;
-  bestTime: string;
-  attempts: number;
-}
+const SegmentsListContainer = styled.div`
+  padding: 2rem;
+  background-color: #f5f5f5;
+`;
 
-function SegmentsList() {
-  const [segments, setSegments] = useState<Segment[]>([]);
+const SearchField = styled.input`
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+  width: 100%;
+  max-width: 400px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+`;
+
+const SortDropdown = styled.select`
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+  width: 100%;
+  max-width: 200px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+`;
+
+const SegmentCard = styled.div`
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+const Pagination = styled.div`
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+`;
+
+const PageButton = styled.button`
+  background-color: #007bff;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin: 0 0.25rem;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #0056b3;
+  }
+`;
+
+const SegmentsList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortOption, setSortOption] = useState('');
 
-  useEffect(() => {
-    const fetchSegments = async () => {
-      try {
-        const response = await axios.get('/api/segments');
-        setSegments(response.data);
-      } catch (error) {
-        console.error('Error fetching segments:', error);
-      }
-    };
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
 
-    fetchSegments();
-  }, []);
+  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSortOption(e.target.value);
+  };
 
-  const filteredSegments = segments.filter(segment =>
-    segment.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const segments = [
+    { name: 'Segment 1', bestTime: '5:30', distance: '10km', attempts: 3 },
+    { name: 'Segment 2', bestTime: '6:15', distance: '8km', attempts: 5 },
+    // ダミーデータを追加
+  ];
+
+  const currentPage: number = 1;
+  const totalPages: number = 5;
 
   return (
-    <div style={{ padding: '20px' }}>
+    <SegmentsListContainer>
       <h1>Myセグメント一覧</h1>
-      <input
+      <SearchField
         type="text"
-        placeholder="セグメント名で検索"
+        placeholder="セグメントを検索"
         value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        style={{ marginBottom: '20px', padding: '5px' }}
+        onChange={handleSearchChange}
       />
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr>
-            <th style={{ border: '1px solid #ddd', padding: '8px' }}>セグメント名</th>
-            <th style={{ border: '1px solid #ddd', padding: '8px' }}>ベストタイム</th>
-            <th style={{ border: '1px solid #ddd', padding: '8px' }}>走行回数</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredSegments.map((segment, index) => (
-            <tr key={index}>
-              <td style={{ border: '1px solid #ddd', padding: '8px' }}>{segment.name}</td>
-              <td style={{ border: '1px solid #ddd', padding: '8px' }}>{segment.bestTime}</td>
-              <td style={{ border: '1px solid #ddd', padding: '8px' }}>{segment.attempts}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+      <SortDropdown value={sortOption} onChange={handleSortChange}>
+        <option value="">ソートを選択</option>
+        <option value="bestTime">ベストタイム</option>
+        <option value="distance">距離</option>
+        <option value="frequency">走行回数</option>
+      </SortDropdown>
+
+      {segments.map((segment, index) => (
+        <SegmentCard key={index}>
+          <h2>{segment.name}</h2>
+          <p>ベストタイム: {segment.bestTime}</p>
+          <p>距離: {segment.distance}</p>
+          <p>走行回数: {segment.attempts}</p>
+        </SegmentCard>
+      ))}
+
+      <Pagination>
+        <PageButton disabled={currentPage === 1}>前へ</PageButton>
+        <span>{currentPage} / {totalPages}</span>
+        <PageButton disabled={currentPage === totalPages}>次へ</PageButton>
+      </Pagination>
+    </SegmentsListContainer>
   );
-}
+};
 
 export default SegmentsList; 

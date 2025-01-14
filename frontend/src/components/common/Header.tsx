@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { mediaQueries } from '../../styles/breakpoints';
 
 const HeaderContainer = styled.header`
   display: flex;
