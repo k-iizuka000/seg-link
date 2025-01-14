@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { styled } from '@mui/material/styles';
+import { styled, useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import Box from '@mui/material/Box';
 import CssBaseline from '@mui/material/CssBaseline';
 import AppBar from '@mui/material/AppBar';
@@ -14,8 +15,11 @@ import ListItemText from '@mui/material/ListItemText';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
 import SettingsIcon from '@mui/icons-material/Settings';
+import IconButton from '@mui/material/IconButton';
+import MenuIcon from '@mui/icons-material/Menu';
 
 const drawerWidth = 240;
+const mobileDrawerWidth = 56;
 
 const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })<{
   open?: boolean;
@@ -34,6 +38,13 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })<{
     }),
     marginLeft: 0,
   }),
+  [theme.breakpoints.down('sm')]: {
+    padding: theme.spacing(2),
+    marginLeft: `-${mobileDrawerWidth}px`,
+    ...(open && {
+      marginLeft: 0,
+    }),
+  },
 }));
 
 const DrawerHeader = styled('div')(({ theme }) => ({
@@ -45,45 +56,69 @@ const DrawerHeader = styled('div')(({ theme }) => ({
 }));
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const [open] = React.useState(true);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [open, setOpen] = React.useState(!isMobile);
+
+  const handleDrawerToggle = () => {
+    setOpen(!open);
+  };
 
   return (
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
       <AppBar
         position="fixed"
-        sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        sx={{ 
+          zIndex: (theme) => theme.zIndex.drawer + 1,
+          ...(isMobile && {
+            width: `calc(100% - ${mobileDrawerWidth}px)`,
+            marginLeft: mobileDrawerWidth,
+          }),
+        }}
       >
         <Toolbar>
-          <Typography variant="h6" noWrap component="div">
-          SegLink
+          {isMobile && (
+            <IconButton
+              color="inherit"
+              aria-label="open drawer"
+              edge="start"
+              onClick={handleDrawerToggle}
+              sx={{ mr: 2 }}
+            >
+              <MenuIcon />
+            </IconButton>
+          )}
+          <Typography variant="h6" noWrap component="div" sx={{ fontSize: isMobile ? '1rem' : '1.25rem' }}>
+            SegLink
           </Typography>
         </Toolbar>
       </AppBar>
       <Drawer
         sx={{
-          width: drawerWidth,
+          width: isMobile ? mobileDrawerWidth : drawerWidth,
           flexShrink: 0,
           '& .MuiDrawer-paper': {
-            width: drawerWidth,
+            width: isMobile ? mobileDrawerWidth : drawerWidth,
             boxSizing: 'border-box',
           },
         }}
-        variant="persistent"
+        variant={isMobile ? 'temporary' : 'persistent'}
         anchor="left"
         open={open}
+        onClose={handleDrawerToggle}
       >
         <DrawerHeader />
         <List>
           {['Dashboard', 'Activities', 'Settings'].map((text, index) => (
             <ListItem key={text} disablePadding>
-              <ListItemButton>
-                <ListItemIcon>
+              <ListItemButton sx={{ px: isMobile ? 1.5 : 2 }}>
+                <ListItemIcon sx={{ minWidth: isMobile ? 'auto' : 56 }}>
                   {index === 0 && <DashboardIcon />}
                   {index === 1 && <FitnessCenterIcon />}
                   {index === 2 && <SettingsIcon />}
                 </ListItemIcon>
-                <ListItemText primary={text} />
+                {!isMobile && <ListItemText primary={text} />}
               </ListItemButton>
             </ListItem>
           ))}
