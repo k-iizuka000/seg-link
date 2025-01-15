@@ -1,37 +1,41 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import DashboardLayout from './components/dashboard/DashboardLayout';
-import Login from './components/Login';
-import Dashboard from './components/Dashboard';
-import SegmentsList from './components/SegmentsList';
-import SegmentDetail from './components/SegmentDetail';
-import ActivityDetail from './components/ActivityDetail';
-import AdvancedSearch from './components/AdvancedSearch';
-import TemplateManager from './components/TemplateManager';
-import Profile from './components/Profile';
-import Logout from './components/Logout';
-import './App.css';
+import React, { Suspense, useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { LoadingSpinner } from './components/common/LoadingSpinner';
 
-function App() {
+// 遅延ローディングの実装
+const lazy = (fn: () => Promise<{ default: React.ComponentType }>) => {
+  const Component: React.FC = () => {
+    const [comp, setComp] = useState<React.ComponentType | null>(null);
+    useEffect(() => {
+      fn().then(mod => {
+        setComp(() => mod.default);
+      });
+    }, []);
+    return comp ? React.createElement(comp) : null;
+  };
+  return Component;
+};
+
+const Dashboard = lazy(() => import('./components/Dashboard'));
+const ActivityDetail = lazy(() => import('./components/ActivityDetail'));
+const AdvancedSearch = lazy(() => import('./components/AdvancedSearch'));
+const TemplateManager = lazy(() => import('./components/TemplateManager'));
+const NotFound = lazy(() => import('./components/NotFound'));
+
+const App: React.FC = () => {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/*" element={
-          <DashboardLayout>
-            <div>Dashboard Content</div>
-          </DashboardLayout>
-        } />
-        <Route path="/login" element={<Login />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/segments" element={<SegmentsList />} />
-        <Route path="/segments/:id" element={<SegmentDetail />} />
-        <Route path="/activities/:activityId" element={<ActivityDetail />} />
-        <Route path="/search" element={<AdvancedSearch />} />
-        <Route path="/templates" element={<TemplateManager />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/logout" element={<Logout />} />
-      </Routes>
-    </BrowserRouter>
+    <Router>
+      <Suspense fallback={<LoadingSpinner />}>
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/activity/:id" element={<ActivityDetail />} />
+          <Route path="/search" element={<AdvancedSearch />} />
+          <Route path="/templates" element={<TemplateManager />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
+    </Router>
   );
-}
+};
 
 export default App;

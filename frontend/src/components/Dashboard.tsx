@@ -1,8 +1,13 @@
-import React from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import styled from 'styled-components';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import { useQuery } from 'react-query';
+
+// Lazy loaded components
+const ActivityFeed = react_1.lazy(() => import('./ActivityFeed'));
+const QuickAccess = react_1.lazy(() => import('./QuickAccess'));
 
 const DashboardContainer = styled.div`
   display: flex;
@@ -20,9 +25,14 @@ const ActivityCard = styled.div`
   width: 100%;
   max-width: 600px;
   margin-bottom: 1rem;
+
+  &:focus-within {
+    outline: 3px solid #007bff;
+    outline-offset: 2px;
+  }
 `;
 
-const QuickAccessLink = styled(Link)`
+const QuickAccessLink = styled(motion(Link))`
   background-color: #007bff !important;
   color: white !important;
   padding: 0.75rem 1.5rem !important;
@@ -35,6 +45,12 @@ const QuickAccessLink = styled(Link)`
 
   &:hover {
     background-color: #0056b3 !important;
+  }
+
+  &:focus-visible {
+    outline: 3px solid #007bff;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.5);
   }
 `;
 
@@ -69,36 +85,68 @@ const ButtonContainer = styled.div`
   max-width: 600px;
 `;
 
-const Dashboard: React.FC = () => {
-  const isLoading = false; // データ読み込み中の状態を管理
+const ErrorMessage = styled(motion.div)`
+  // ... existing styles ...
+`;
+
+const RetryButton = styled.button`
+  // ... existing styles ...
+
+  &:focus-visible {
+    outline: 3px solid #28a745;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.5);
+  }
+`;
+
+const Dashboard = () => {
+  const { data, error, isLoading, refetch } = useQuery('dashboardData', fetchDashboardData);
+
+  const handleKeyPress = (event: React.KeyboardEvent) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      // Handle keyboard navigation
+    }
+  };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      <DashboardContainer>
-        <h1>ダッシュボード</h1>
+    <DashboardContainer role="main" aria-label="Dashboard">
+      <Suspense fallback={<SkeletonUI />}>
         {isLoading ? (
-          <SkeletonUI />
+          <SkeletonUI role="progressbar" aria-busy="true" />
+        ) : error ? (
+          <ErrorMessage
+            role="alert"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            {error.message}
+            <RetryButton 
+              onClick={() => refetch()}
+              onKeyPress={handleKeyPress}
+              aria-label="Retry loading dashboard data"
+            >
+              Retry
+            </RetryButton>
+          </ErrorMessage>
         ) : (
-          <ActivityCard>
-            <h2>最近のアクティビティ</h2>
-            <p>アクティビティの詳細情報をここに表示します。</p>
-          </ActivityCard>
-        )}
+          <>
+            <h1>ダッシュボード</h1>
+            <ActivityCard>
+              <h2>最近のアクティビティ</h2>
+              <p>アクティビティの詳細情報をここに表示します。</p>
+            </ActivityCard>
 
-        <ButtonContainer>
-          <QuickAccessLink to="/segments">Myセグメント一覧</QuickAccessLink>
-          <QuickAccessLink to="/search">複合条件検索</QuickAccessLink>
-          <QuickAccessLink to="/templates">テンプレート管理</QuickAccessLink>
-          <QuickAccessLink to="/profile">プロフィール</QuickAccessLink>
-        </ButtonContainer>
-      </DashboardContainer>
-    </motion.div>
+            <ButtonContainer>
+              <QuickAccessLink to="/segments">Myセグメント一覧</QuickAccessLink>
+              <QuickAccessLink to="/search">複合条件検索</QuickAccessLink>
+              <QuickAccessLink to="/templates">テンプレート管理</QuickAccessLink>
+              <QuickAccessLink to="/profile">プロフィール</QuickAccessLink>
+            </ButtonContainer>
+          </>
+        )}
+      </Suspense>
+    </DashboardContainer>
   );
 };
 
-export default Dashboard; 
+export default Dashboard;

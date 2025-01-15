@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 
-const HeaderContainer = styled.header`
+const HeaderContainer = styled(motion.header)`
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -20,7 +21,7 @@ const Logo = styled.div`
   color: #333;
 `;
 
-const Navigation = styled.nav<{ isOpen: boolean }>`
+const Navigation = styled(motion.nav)<{ isOpen: boolean }>`
   display: flex;
   align-items: center;
   gap: 2rem;
@@ -38,15 +39,21 @@ const Navigation = styled.nav<{ isOpen: boolean }>`
   }
 `;
 
-const StyledLink = styled(Link)`
+const StyledLink = styled(motion(Link))`
   text-decoration: none;
   color: #333;
   padding: 0.5rem;
   border-radius: 4px;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease-in-out;
 
   &:hover {
     background-color: #f5f5f5;
+    transform: translateY(-2px);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
   }
 
   &.active {
@@ -61,6 +68,16 @@ const HamburgerButton = styled.button`
   border: none;
   padding: 0.5rem;
   cursor: pointer;
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: scale(1.1);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+  }
 
   @media (max-width: 768px) {
     display: block;
@@ -83,20 +100,37 @@ const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <HeaderContainer>
+    <HeaderContainer
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
       <Logo>SegLink</Logo>
       
-      <HamburgerButton onClick={() => setIsMenuOpen(!isMenuOpen)}>
+      <HamburgerButton 
+        onClick={() => setIsMenuOpen(!isMenuOpen)}
+        aria-expanded={isMenuOpen}
+        aria-label="メインメニュー"
+      >
         ☰
       </HamburgerButton>
 
-      <Navigation isOpen={isMenuOpen}>
-        <StyledLink to="/dashboard">ダッシュボード</StyledLink>
-        <StyledLink to="/segments">Myセグメント</StyledLink>
-        <StyledLink to="/search">検索</StyledLink>
-        <StyledLink to="/templates">テンプレート</StyledLink>
-        <StyledLink to="/profile">プロフィール</StyledLink>
-      </Navigation>
+      <AnimatePresence>
+        <Navigation 
+          isOpen={isMenuOpen}
+          role="navigation"
+          aria-label="メインナビゲーション"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <StyledLink to="/dashboard" whileHover={{ scale: 1.05 }}>ダッシュボード</StyledLink>
+          <StyledLink to="/segments" whileHover={{ scale: 1.05 }}>Myセグメント</StyledLink>
+          <StyledLink to="/search" whileHover={{ scale: 1.05 }}>検索</StyledLink>
+          <StyledLink to="/templates" whileHover={{ scale: 1.05 }}>テンプレート</StyledLink>
+          <StyledLink to="/profile" whileHover={{ scale: 1.05 }}>プロフィール</StyledLink>
+        </Navigation>
+      </AnimatePresence>
 
       <UserInfo>
         <UserAvatar src="/default-avatar.png" alt="User avatar" />

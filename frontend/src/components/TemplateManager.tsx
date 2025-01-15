@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
 
 const TemplateManagerContainer = styled.div`
@@ -15,6 +15,10 @@ const TemplateCard = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+
+  &:focus-within {
+    outline: 2px solid #007bff;
+  }
 `;
 
 const Button = styled.button`
@@ -26,8 +30,9 @@ const Button = styled.button`
   cursor: pointer;
   transition: background-color 0.2s;
 
-  &:hover {
+  &:hover, &:focus {
     background-color: #0056b3;
+    outline: 2px solid #0056b3;
   }
 `;
 
@@ -45,16 +50,16 @@ const InputField = styled.input`
 `;
 
 const Modal = styled.div<{ isOpen: boolean }>`
-  display: ${({ isOpen }) => (isOpen ? 'block' : 'none')};
+  display: ${({ isOpen }) => (isOpen ? 'flex' : 'none')};
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
   justify-content: center;
   align-items: center;
+  z-index: 1000;
 `;
 
 const ModalContent = styled.div`
@@ -63,6 +68,11 @@ const ModalContent = styled.div`
   border-radius: 8px;
   width: 90%;
   max-width: 500px;
+  position: relative;
+  
+  &:focus {
+    outline: none;
+  }
 `;
 
 const ConfirmDialog = styled.div<{ isOpen: boolean }>`
@@ -90,10 +100,22 @@ const TemplateManager: React.FC = () => {
   const [newTemplateName, setNewTemplateName] = useState('');
   const [newTemplateDescription, setNewTemplateDescription] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
   const [editTemplateName, setEditTemplateName] = useState('');
   const [editTemplateDescription, setEditTemplateDescription] = useState('');
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [templateToDelete, setTemplateToDelete] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isModalOpen) {
+        setIsModalOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isModalOpen]);
 
   const handleCreateTemplate = (e: React.FormEvent) => {
     e.preventDefault();

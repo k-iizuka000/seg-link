@@ -1,9 +1,17 @@
 import React from 'react';
 import styled from 'styled-components';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useForm } from 'react-hook-form';
 
-const ActivityDetailContainer = styled.div`
+const ActivityDetailContainer = styled(motion.div)`
   padding: 2rem;
   background-color: #f5f5f5;
+  outline: none;
+  
+  &:focus-visible {
+    outline: 2px solid #4caf50;
+    outline-offset: 2px;
+  }
 `;
 
 const ActivityInfo = styled.div`
@@ -69,6 +77,18 @@ const CancelButton = styled.button`
 `;
 
 const ActivityDetail: React.FC = () => {
+  const { register, handleSubmit, formState: { errors } } = useForm();
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      // Handle escape key
+      containerRef.current?.blur();
+    }
+  };
+
   const activity = {
     title: 'Morning Ride',
     date: '2023-10-01',
@@ -84,25 +104,45 @@ const ActivityDetail: React.FC = () => {
   ];
 
   return (
-    <ActivityDetailContainer>
+    <ActivityDetailContainer
+      ref={containerRef}
+      role="region"
+      aria-label="Activity Details"
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+    >
       <h1>アクティビティ詳細</h1>
-      <ActivityInfo>
+      <ActivityInfo role="article" aria-label="Activity Information">
         <h2>{activity.title}</h2>
         <p>日付: {activity.date}</p>
         <p>距離: {activity.distance}</p>
         <p>タイム: {activity.time}</p>
         <p>パワー: {activity.power}</p>
       </ActivityInfo>
-      <TemplateForm>
+      <TemplateForm 
+        role="form" 
+        aria-label="Activity Edit Form"
+        onSubmit={handleSubmit((data) => console.log(data))}
+      >
         <h3>テンプレート適用</h3>
-        <InputField type="text" placeholder="テンプレート名" />
+        <InputField
+          {...register('title')}
+          aria-label="Activity Title"
+          aria-required="true"
+          aria-invalid={errors.title ? 'true' : 'false'}
+          type="text"
+          placeholder="テンプレート名"
+        />
         <InputField type="text" placeholder="服装" />
         <InputField type="text" placeholder="ホイール" />
         <InputField type="text" placeholder="風" />
         <InputField type="text" placeholder="体重" />
         <button type="submit">適用</button>
       </TemplateForm>
-      <HistoryContainer>
+      <HistoryContainer
+        role="log"
+        aria-label="Edit History"
+      >
         <h3>編集履歴</h3>
         <ul>
           {editHistory.map((entry, index) => (
@@ -114,8 +154,20 @@ const ActivityDetail: React.FC = () => {
         <p>Strava同期状態: 同期済み</p>
       </SyncStatus>
       <ButtonContainer>
-        <SaveButton>保存</SaveButton>
-        <CancelButton>キャンセル</CancelButton>
+        <SaveButton
+          type="submit"
+          aria-label="Save Changes"
+          role="button"
+        >
+          Save
+        </SaveButton>
+        <CancelButton
+          type="button"
+          aria-label="Cancel Changes"
+          role="button"
+        >
+          Cancel
+        </CancelButton>
       </ButtonContainer>
     </ActivityDetailContainer>
   );
