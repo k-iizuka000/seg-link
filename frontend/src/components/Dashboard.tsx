@@ -1,5 +1,8 @@
 import React from 'react';
 import styled from 'styled-components';
+import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import axios from 'axios';
 
 const DashboardContainer = styled.div`
   display: flex;
@@ -19,18 +22,19 @@ const ActivityCard = styled.div`
   margin-bottom: 1rem;
 `;
 
-const QuickAccessButton = styled.button`
-  background-color: #007bff;
-  color: white;
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  margin: 0.5rem;
-  transition: background-color 0.2s;
+const QuickAccessLink = styled(Link)`
+  background-color: #007bff !important;
+  color: white !important;
+  padding: 0.75rem 1.5rem !important;
+  border: none !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+  margin: 0.5rem !important;
+  text-decoration: none !important;
+  transition: background-color 0.2s !important;
 
   &:hover {
-    background-color: #0056b3;
+    background-color: #0056b3 !important;
   }
 `;
 
@@ -56,28 +60,44 @@ const SkeletonUI = styled.div`
   }
 `;
 
+const ButtonContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 1rem;
+  width: 100%;
+  max-width: 600px;
+`;
+
 const Dashboard: React.FC = () => {
   const isLoading = false; // データ読み込み中の状態を管理
 
   return (
-    <DashboardContainer>
-      <h1>ダッシュボード</h1>
-      {isLoading ? (
-        <SkeletonUI />
-      ) : (
-        <ActivityCard>
-          <h2>最近のアクティビティ</h2>
-          <p>アクティビティの詳細情報をここに表示します。</p>
-        </ActivityCard>
-      )}
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <DashboardContainer>
+        <h1>ダッシュボード</h1>
+        {isLoading ? (
+          <SkeletonUI />
+        ) : (
+          <ActivityCard>
+            <h2>最近のアクティビティ</h2>
+            <p>アクティビティの詳細情報をここに表示します。</p>
+          </ActivityCard>
+        )}
 
-      <div>
-        <QuickAccessButton>Myセグメント一覧</QuickAccessButton>
-        <QuickAccessButton>複合条件検索</QuickAccessButton>
-        <QuickAccessButton>テンプレート管理</QuickAccessButton>
-        <QuickAccessButton>プロフィール</QuickAccessButton>
-      </div>
-    </DashboardContainer>
+        <ButtonContainer>
+          <QuickAccessLink to="/segments">Myセグメント一覧</QuickAccessLink>
+          <QuickAccessLink to="/search">複合条件検索</QuickAccessLink>
+          <QuickAccessLink to="/templates">テンプレート管理</QuickAccessLink>
+          <QuickAccessLink to="/profile">プロフィール</QuickAccessLink>
+        </ButtonContainer>
+      </DashboardContainer>
+    </motion.div>
   );
 };
 

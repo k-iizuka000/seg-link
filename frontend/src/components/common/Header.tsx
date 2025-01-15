@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
+import { Link } from 'react-router-dom';
 
 const HeaderContainer = styled.header`
   display: flex;
@@ -37,7 +38,7 @@ const Navigation = styled.nav<{ isOpen: boolean }>`
   }
 `;
 
-const NavLink = styled.a`
+const StyledLink = styled(Link)`
   text-decoration: none;
   color: #333;
   padding: 0.5rem;
@@ -90,16 +91,16 @@ const Header: React.FC = () => {
       </HamburgerButton>
 
       <Navigation isOpen={isMenuOpen}>
-        <NavLink href="/dashboard">ダッシュボード</NavLink>
-        <NavLink href="/segments">Myセグメント</NavLink>
-        <NavLink href="/search">検索</NavLink>
-        <NavLink href="/templates">テンプレート</NavLink>
-        <NavLink href="/profile">プロフィール</NavLink>
+        <StyledLink to="/dashboard">ダッシュボード</StyledLink>
+        <StyledLink to="/segments">Myセグメント</StyledLink>
+        <StyledLink to="/search">検索</StyledLink>
+        <StyledLink to="/templates">テンプレート</StyledLink>
+        <StyledLink to="/profile">プロフィール</StyledLink>
       </Navigation>
 
       <UserInfo>
         <UserAvatar src="/default-avatar.png" alt="User avatar" />
-        <NavLink href="/logout">ログアウト</NavLink>
+        <StyledLink to="/logout">ログアウト</StyledLink>
       </UserInfo>
     </HeaderContainer>
   );
