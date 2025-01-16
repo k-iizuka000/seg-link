@@ -7,13 +7,13 @@ const Container = styled.div`
   margin: 0 auto;
 `;
 
-const AdvancedSearch = () => {
+const MySegments = () => {
   return (
     <Container>
-      <h1>複合条件検索</h1>
-      <p>複合条件検索フォームを表示する予定です。</p>
+      <h1>Myセグメント一覧</h1>
+      <p>セグメント一覧を表示する予定です。</p>
     </Container>
   );
 };
 
-export default AdvancedSearch;
+export default MySegments; 

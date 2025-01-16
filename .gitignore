@@ -6,6 +6,7 @@ plan/*
 QA.md
 .DS_Store
 old/*
+.vscode
 
 
 

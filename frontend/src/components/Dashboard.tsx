@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -6,8 +6,22 @@ import axios from 'axios';
 import { useQuery } from 'react-query';
 
 // Lazy loaded components
-const ActivityFeed = react_1.lazy(() => import('./ActivityFeed'));
-const QuickAccess = react_1.lazy(() => import('./QuickAccess'));
+const ActivityFeed = lazy(() => import('./dashboard/ActivityFeed'));
+const QuickAccess = lazy(() => import('./dashboard/QuickAccess'));
+
+// APIからダッシュボードデータを取得する関数
+const fetchDashboardData = async () => {
+  try {
+    const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/dashboard`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error('ダッシュボードデータの取得に失敗しました');
+  }
+};
 
 const DashboardContainer = styled.div`
   display: flex;
@@ -100,7 +114,11 @@ const RetryButton = styled.button`
 `;
 
 const Dashboard = () => {
-  const { data, error, isLoading, refetch } = useQuery('dashboardData', fetchDashboardData);
+  const { data, error, isLoading, refetch } = useQuery<any, Error>('dashboardData', fetchDashboardData, {
+    retry: 3,
+    retryDelay: 1000,
+    refetchOnWindowFocus: false,
+  });
 
   const handleKeyPress = (event: React.KeyboardEvent) => {
     if (event.key === 'Enter' || event.key === ' ') {

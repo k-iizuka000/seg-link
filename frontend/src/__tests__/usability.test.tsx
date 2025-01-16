@@ -1,27 +1,37 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { AccessibilityProvider } from '../components/common/AccessibilityProvider';
 import App from '../App';
 import '@testing-library/jest-dom';
 
-// React.lazyのモック実装
+// React.lazyのモック実装を簡略化
 jest.mock('react', () => {
   const actualReact = jest.requireActual('react');
   return {
     ...actualReact,
-    lazy: (fn: () => Promise<{ default: React.ComponentType<unknown> }>) => {
-      return actualReact.forwardRef<React.ComponentType<unknown>, React.PropsWithChildren<unknown>>((props: React.PropsWithChildren<unknown>, ref: React.ForwardedRef<React.ComponentType<unknown>>) => {
-        const [Comp, setComp] = React.useState<React.ComponentType<unknown> | null>(null);
-        
+    lazy: <T extends React.ComponentType<any>>(fn: () => Promise<{ default: T }>) => {
+      const Component = actualReact.forwardRef<React.ComponentRef<T>, React.ComponentPropsWithoutRef<T>>(
+        (props: React.ComponentPropsWithoutRef<T>, ref: React.ForwardedRef<T>) => {
+        const [Resolved, setResolved] = React.useState<T | undefined>();
+
         React.useEffect(() => {
-          fn().then(mod => setComp(() => mod.default));
+          fn().then((module) => {
+            setResolved(module.default);
+          });
         }, [fn]);
 
-        if (!Comp) return null;
-        return React.createElement(Comp, { ...props, ref } as React.Attributes & { ref?: React.ForwardedRef<React.ComponentType<unknown>> });
-      });
-    }
+        if (!Resolved) {
+          return null;
+        }
+
+        return <Resolved {...props} ref={ref} />;
+      }
+      );
+
+      Component.displayName = 'LazyComponent';
+      return Component;
+    },
   };
 });
 

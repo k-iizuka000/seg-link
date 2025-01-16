@@ -1,5 +1,7 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import styled from 'styled-components';
+import axios from 'axios';
 
 const TemplateManagerContainer = styled.div`
   padding: 2rem;
@@ -49,14 +51,14 @@ const InputField = styled.input`
   border-radius: 4px;
 `;
 
-const Modal = styled.div<{ isOpen: boolean }>`
-  display: ${({ isOpen }) => (isOpen ? 'flex' : 'none')};
+const ModalBase = styled.div`
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  right: 0;
+  bottom: 0;
   background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
@@ -69,53 +71,69 @@ const ModalContent = styled.div`
   width: 90%;
   max-width: 500px;
   position: relative;
-  
-  &:focus {
-    outline: none;
-  }
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 `;
 
-const ConfirmDialog = styled.div<{ isOpen: boolean }>`
-  display: ${({ isOpen }) => (isOpen ? 'block' : 'none')};
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-`;
-
-const ConfirmContent = styled.div`
-  background: white;
-  padding: 2rem;
-  border-radius: 8px;
-  width: 90%;
+const ConfirmContent = styled(ModalContent)`
   max-width: 400px;
 `;
+
+interface ModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+}
+
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
+  console.log('Modal rendered with isOpen:', isOpen);
+  
+  if (!isOpen) {
+    console.log('Modal not rendering - isOpen is false');
+    return null;
+  }
+
+  const modalContent = (
+    <ModalBase onClick={onClose}>
+      <div onClick={e => e.stopPropagation()}>
+        {children}
+      </div>
+    </ModalBase>
+  );
+
+  console.log('Rendering modal with portal');
+  return createPortal(modalContent, document.body);
+};
 
 const TemplateManager: React.FC = () => {
   const [newTemplateName, setNewTemplateName] = useState('');
   const [newTemplateDescription, setNewTemplateDescription] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const modalRef = useRef<HTMLDivElement>(null);
   const [editTemplateName, setEditTemplateName] = useState('');
   const [editTemplateDescription, setEditTemplateDescription] = useState('');
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [templateToDelete, setTemplateToDelete] = useState<string | null>(null);
+  const apiClient = axios.create({
+    baseURL: import.meta.env.VITE_API_BASE_URL,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  useEffect(() => {
+    console.log('Modal state:', { isModalOpen, isConfirmOpen });
+  }, [isModalOpen, isConfirmOpen]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isModalOpen) {
+      if (e.key === 'Escape') {
         setIsModalOpen(false);
+        setIsConfirmOpen(false);
       }
     };
 
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
-  }, [isModalOpen]);
+  }, []);
 
   const handleCreateTemplate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,14 +154,26 @@ const TemplateManager: React.FC = () => {
   };
 
   const handleDelete = (templateName: string) => {
+    console.log('handleDelete called with:', templateName);
     setTemplateToDelete(templateName);
     setIsConfirmOpen(true);
+    console.log('isConfirmOpen set to:', true);
   };
 
-  const confirmDelete = () => {
-    // 削除ロジックをここに追加
-    console.log('削除:', templateToDelete);
-    setIsConfirmOpen(false);
+  const confirmDelete = async () => {
+    console.log('confirmDelete called');
+    if (templateToDelete) {
+      try {
+        await apiClient.delete(`/api/templates/${templateToDelete}`);
+        console.log(`テンプレート "${templateToDelete}" を削除しました。`);
+      } catch (error) {
+        console.error('テンプレート削除エラー:', error);
+      } finally {
+        setIsConfirmOpen(false);
+        setTemplateToDelete(null);
+        console.log('isConfirmOpen set to:', false);
+      }
+    }
   };
 
   const templates = [
@@ -182,7 +212,8 @@ const TemplateManager: React.FC = () => {
           </div>
         </TemplateCard>
       ))}
-      <Modal isOpen={isModalOpen}>
+      
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
         <ModalContent>
           <h2>テンプレート編集</h2>
           <InputField
@@ -201,16 +232,17 @@ const TemplateManager: React.FC = () => {
           <Button onClick={() => setIsModalOpen(false)}>キャンセル</Button>
         </ModalContent>
       </Modal>
-      <ConfirmDialog isOpen={isConfirmOpen}>
+
+      <Modal isOpen={isConfirmOpen} onClose={() => setIsConfirmOpen(false)}>
         <ConfirmContent>
           <h2>削除確認</h2>
           <p>本当に削除しますか？</p>
           <Button onClick={confirmDelete}>はい</Button>
           <Button onClick={() => setIsConfirmOpen(false)}>いいえ</Button>
         </ConfirmContent>
-      </ConfirmDialog>
+      </Modal>
     </TemplateManagerContainer>
   );
 };
 
-export default TemplateManager; 
+export default TemplateManager;
