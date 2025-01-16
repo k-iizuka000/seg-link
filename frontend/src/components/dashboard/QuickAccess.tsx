@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
+import { FaUsers, FaFileAlt, FaSearch, FaCog } from 'react-icons/fa';
 
 const QuickAccessContainer = styled.div`
   background: white;
@@ -21,20 +22,25 @@ const QuickAccessGrid = styled.div`
   gap: 1rem;
 `;
 
-const QuickAccessItem = styled(Link)`
+const QuickAccessButton = styled(Link)`
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 1rem;
+  background: #f5f5f5;
+  border-radius: 6px;
   text-decoration: none;
-  color: #333;
-  border: 1px solid #eee;
-  border-radius: 4px;
-  transition: all 0.2s ease;
+  color: #444;
+  transition: all 0.2s;
 
   &:hover {
-    background-color: #f5f5f5;
+    background: #e0e0e0;
     transform: translateY(-2px);
+  }
+
+  svg {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
   }
 `;
 
@@ -43,9 +49,10 @@ const QuickAccess: React.FC = () => {
     <QuickAccessContainer>
       <QuickAccessTitle>クイックアクセス</QuickAccessTitle>
       <QuickAccessGrid>
-        <QuickAccessItem to="/segments">セグメント</QuickAccessItem>
-        <QuickAccessItem to="/templates">テンプレート</QuickAccessItem>
-        <QuickAccessItem to="/profile">プロフィール</QuickAccessItem>
+        <QuickAccessButton to="/segments"><FaUsers />セグメント</QuickAccessButton>
+        <QuickAccessButton to="/templates"><FaFileAlt />テンプレート</QuickAccessButton>
+        <QuickAccessButton to="/search"><FaSearch />検索</QuickAccessButton>
+        <QuickAccessButton to="/settings"><FaCog />設定</QuickAccessButton>
       </QuickAccessGrid>
     </QuickAccessContainer>
   );

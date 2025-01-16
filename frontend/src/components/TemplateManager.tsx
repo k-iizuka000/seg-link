@@ -2,10 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import styled from 'styled-components';
 import axios from 'axios';
+import { Button, Input, SearchBar } from '../common/components';
+import { useTemplates } from '../hooks/useTemplates';
 
 const TemplateManagerContainer = styled.div`
   padding: 2rem;
   background-color: #f5f5f5;
+  max-width: 1200px;
+  margin: 0 auto;
 `;
 
 const TemplateCard = styled.div`
@@ -23,7 +27,7 @@ const TemplateCard = styled.div`
   }
 `;
 
-const Button = styled.button`
+const StyledButton = styled.button`
   background-color: #007bff;
   color: white;
   padding: 0.5rem 1rem;
@@ -76,6 +80,16 @@ const ModalContent = styled.div`
 
 const ConfirmContent = styled(ModalContent)`
   max-width: 400px;
+`;
+
+const SearchContainer = styled.div`
+  margin-bottom: 2rem;
+`;
+
+const TemplateActions = styled.div`
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
 `;
 
 interface ModalProps {
@@ -185,6 +199,13 @@ const TemplateManager: React.FC = () => {
   return (
     <TemplateManagerContainer>
       <h1>テンプレート管理</h1>
+      <SearchContainer>
+        <SearchBar />
+      </SearchContainer>
+      <TemplateActions>
+        <Button>新規作成</Button>
+        <Button>一括削除</Button>
+      </TemplateActions>
       <NewTemplateForm onSubmit={handleCreateTemplate}>
         <InputField
           type="text"

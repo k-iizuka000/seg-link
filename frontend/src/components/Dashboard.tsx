@@ -8,6 +8,9 @@ import { useQuery } from 'react-query';
 // Lazy loaded components
 const ActivityFeed = lazy(() => import('./dashboard/ActivityFeed'));
 const QuickAccess = lazy(() => import('./dashboard/QuickAccess'));
+const SegmentList = lazy(() => import('./dashboard/SegmentList'));
+const TemplateManager = lazy(() => import('../components/TemplateManager'));
+const SearchBar = lazy(() => import('./common/SearchBar'));
 
 // APIからダッシュボードデータを取得する関数
 const fetchDashboardData = async () => {
