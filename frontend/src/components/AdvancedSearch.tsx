@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
+import { useNavigate } from 'react-router-dom';
 
 const Container = styled.div`
   padding: 2rem;
@@ -12,14 +13,20 @@ const AdvancedSearch = () => {
   const [wheel, setWheel] = useState('');
   const [wind, setWind] = useState('');
   const [weightRange, setWeightRange] = useState({ min: '', max: '' });
+  const navigate = useNavigate();
 
   const handleSearch = () => {
     // Implement search logic here
     console.log('Searching with:', { clothing, wheel, wind, weightRange });
   };
 
+  const handleBackToDashboard = () => {
+    navigate('/dashboard');
+  };
+
   return (
     <Container>
+      <button onClick={handleBackToDashboard}>ダッシュボードに戻る</button>
       <h1>複合条件検索</h1>
       <p>複合条件検索フォームを表示する予定です。</p>
       <form onSubmit={(e) => { e.preventDefault(); handleSearch(); }}>

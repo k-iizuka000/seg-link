@@ -83,8 +83,6 @@ interface FormInputs {
 
 const ActivityDetail: React.FC = () => {
   const { register, handleSubmit, formState: { errors } } = useForm<FormInputs>();
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

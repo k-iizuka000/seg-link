@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { stravaApiClient, updateProfile } from '../api/client';
+import { useNavigate } from 'react-router-dom';
 
 const Container = styled.div`
   padding: 20px;
@@ -52,6 +53,7 @@ interface StravaProfile {
 
 const Profile: React.FC = () => {
   const [stravaProfile, setStravaProfile] = useState<StravaProfile | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchStravaProfile = async () => {
@@ -77,8 +79,13 @@ const Profile: React.FC = () => {
     }
   };
 
+  const handleBackToDashboard = () => {
+    navigate('/dashboard');
+  };
+
   return (
     <Container>
+      <button onClick={handleBackToDashboard}>ダッシュボードに戻る</button>
       <Title>プロフィール設定</Title>
       {stravaProfile && (
         <div>

@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Segment } from '@/types/Activity';
+import { useNavigate } from 'react-router-dom';
 
 type SegmentProps = {
   segment: Segment;
@@ -32,8 +33,15 @@ const SegmentDescription = styled.p`
 `;
 
 const SegmentList: React.FC<SegmentProps> = ({ segment }) => {
+  const navigate = useNavigate();
+
+  const handleBackToDashboard = () => {
+    navigate('/dashboard');
+  };
+
   return (
     <SegmentContainer>
+      <button onClick={handleBackToDashboard}>ダッシュボードに戻る</button>
       <SegmentHeader>
         <SegmentName>{segment.name}</SegmentName>
       </SegmentHeader>

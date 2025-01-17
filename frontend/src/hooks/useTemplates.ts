@@ -2,11 +2,6 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Template } from '@/types';
 
-type ErrorType = {
-  message: string;
-  code?: number;
-};
-
 interface TemplateError {
   message: string;
   status?: number;

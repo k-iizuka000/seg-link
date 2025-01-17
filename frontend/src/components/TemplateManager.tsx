@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import styled from 'styled-components';
-import axios from 'axios';
 import { Button, SearchBar } from '@/common/components';
 import { useTemplates } from '@/hooks/useTemplates';
-import { useQuery } from 'react-query';
 import { fetchTemplates } from '@/api/client';
 import { Template } from '@/types';
+import { useNavigate } from 'react-router-dom';
+import { createPortal } from 'react-dom';
+import axios from 'axios';
+import { useQuery } from 'react-query';
 
 const TemplateManagerContainer = styled.div`
   padding: 2rem;
@@ -139,6 +140,7 @@ const TemplateManager: React.FC<TemplateProps> = ({ template }) => {
       'Content-Type': 'application/json',
     },
   });
+  const navigate = useNavigate();
 
   useEffect(() => {
     console.log('Modal state:', { isModalOpen, isConfirmOpen });
@@ -163,11 +165,11 @@ const TemplateManager: React.FC<TemplateProps> = ({ template }) => {
       name: newTemplateName,
       description: newTemplateDescription,
     })
-    .then(response => {
+    .then((response: any) => {
       console.log('テンプレートが作成されました:', response.data);
       // 作成後の処理をここに追加
     })
-    .catch(error => {
+    .catch((error: any) => {
       console.error('テンプレート作成エラー:', error);
     });
   };
@@ -207,6 +209,10 @@ const TemplateManager: React.FC<TemplateProps> = ({ template }) => {
     }
   };
 
+  const handleBackToDashboard = () => {
+    navigate('/dashboard');
+  };
+
   const { data: templates, error, isLoading } = useQuery('templates', () => fetchTemplates('your_access_token_here'));
 
   if (isLoading) return <div>Loading...</div>;
@@ -214,6 +220,7 @@ const TemplateManager: React.FC<TemplateProps> = ({ template }) => {
 
   return (
     <TemplateManagerContainer>
+      <button onClick={handleBackToDashboard}>ダッシュボードに戻る</button>
       <h1>テンプレート管理</h1>
       <SearchContainer>
         <SearchBar />

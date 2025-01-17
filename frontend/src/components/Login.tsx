@@ -86,7 +86,10 @@ interface LoginProps {
 const Login: React.FC<LoginProps> = ({ isLoading, error }) => {
   const handleStravaLogin = () => {
     // Stravaの認証URLにリダイレクト
-    const clientId = process.env.REACT_APP_STRAVA_CLIENT_ID;
+    const clientId = import.meta.env.VITE_STRAVA_CLIENT_ID;
+    console.log('VITE_STRAVA_CLIENT_ID:', clientId); // デバッグ用
+    console.log('import.meta.env:', import.meta.env); // すべての環境変数を表示
+    
     const redirectUri = `${window.location.origin}/auth/callback`;
     const scope = 'read,activity:read_all,profile:read_all';
     
