@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import { ThemeProvider, StyleSheetManager } from 'styled-components';
 import { LoadingSpinner } from './components/common/LoadingSpinner';
 import isPropValid from '@emotion/is-prop-valid';
+import Callback from './components/Callback';
 
 // Lazy load components
 const Dashboard = React.lazy(() => import('./components/Dashboard'));
@@ -43,6 +44,7 @@ const App: React.FC = () => {
             <Route path="/segment-list" element={<SegmentList />} />
             <Route path="/search-results" element={<SearchResults />} />
             <Route path="/template-editor" element={<TemplateEditor />} />
+            <Route path="/auth/callback" element={<Callback />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
