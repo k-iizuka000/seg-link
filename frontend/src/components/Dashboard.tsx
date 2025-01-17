@@ -1,15 +1,9 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense } from 'react';
 import styled from 'styled-components';
 import axios from 'axios';
 import { useQuery } from 'react-query';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-
-// Lazy loaded components
-const ActivityFeed = lazy(() => import('./dashboard/ActivityFeed'));
-const QuickAccess = lazy(() => import('./dashboard/QuickAccess'));
-const SegmentList = lazy(() => import('./dashboard/SegmentList'));
-const SearchBar = lazy(() => import('./common/SearchBar'));
 
 // APIからダッシュボードデータを取得する関数
 const fetchDashboardData = async () => {
@@ -116,7 +110,7 @@ const RetryButton = styled.button`
 `;
 
 const Dashboard = () => {
-  const { data, error, isLoading, refetch } = useQuery<any, Error>('dashboardData', fetchDashboardData, {
+  const { error, isLoading, refetch } = useQuery<any, Error>('dashboardData', fetchDashboardData, {
     retry: 3,
     retryDelay: 1000,
     refetchOnWindowFocus: false,

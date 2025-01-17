@@ -1,5 +1,6 @@
-import React, { ForwardedRef } from 'react';
+import React from 'react';
 import { render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom';
 
 interface Props {
   label: string;
