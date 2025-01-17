@@ -1,6 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 
 const ActivityDetailContainer = styled(motion.div)`
@@ -76,15 +76,19 @@ const CancelButton = styled.button`
   }
 `;
 
+interface FormInputs {
+  title: string;
+  description: string;
+}
+
 const ActivityDetail: React.FC = () => {
-  const { register, handleSubmit, formState: { errors } } = useForm();
+  const { register, handleSubmit, formState: { errors } } = useForm<FormInputs>();
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {
-      // Handle escape key
       containerRef.current?.blur();
     }
   };

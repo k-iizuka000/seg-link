@@ -53,6 +53,8 @@ const QuickAccess: React.FC = () => {
         <QuickAccessButton to="/templates"><FaFileAlt />テンプレート</QuickAccessButton>
         <QuickAccessButton to="/search"><FaSearch />検索</QuickAccessButton>
         <QuickAccessButton to="/settings"><FaCog />設定</QuickAccessButton>
+        <QuickAccessButton to="/profile"><FaUsers />プロフィール</QuickAccessButton>
+        <QuickAccessButton to="/advanced-search"><FaSearch />複合条件検索</QuickAccessButton>
       </QuickAccessGrid>
     </QuickAccessContainer>
   );

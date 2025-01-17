@@ -1,5 +1,8 @@
 import React from 'react';
 import styled from 'styled-components';
+import { useQuery } from 'react-query';
+import { fetchSegments } from '@/api/client';
+import { Segment } from '@/types';
 
 const SegmentListContainer = styled.div`
   padding: 1rem;
@@ -9,10 +12,20 @@ const SegmentListContainer = styled.div`
 `;
 
 const SegmentList: React.FC = () => {
+  const { data: segments, error, isLoading } = useQuery<Segment[]>('segments', () => fetchSegments('your_access_token_here'));
+
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error loading segments</div>;
+
   return (
     <SegmentListContainer>
-      <h2>セグメント一覧</h2>
-      <p>セグメントのリストをここに表示します。</p>
+      {segments && segments.map((segment: Segment) => (
+        <div key={segment.id}>
+          <h3>{segment.name}</h3>
+          <p>Distance: {segment.distance}m</p>
+          <p>Created: {new Date(segment.createdAt).toLocaleDateString()}</p>
+        </div>
+      ))}
     </SegmentListContainer>
   );
 };

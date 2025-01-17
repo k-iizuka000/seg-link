@@ -56,6 +56,13 @@ const PageButton = styled.button`
   }
 `;
 
+interface Segment {
+  name: string;
+  bestTime: string;
+  distance: string;
+  attempts: number;
+}
+
 const SegmentsList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOption, setSortOption] = useState('');
@@ -68,7 +75,7 @@ const SegmentsList: React.FC = () => {
     setSortOption(e.target.value);
   };
 
-  const segments = [
+  const segments: Segment[] = [
     { name: 'Segment 1', bestTime: '5:30', distance: '10km', attempts: 3 },
     { name: 'Segment 2', bestTime: '6:15', distance: '8km', attempts: 5 },
     // ダミーデータを追加
@@ -93,7 +100,7 @@ const SegmentsList: React.FC = () => {
         <option value="frequency">走行回数</option>
       </SortDropdown>
 
-      {segments.map((segment, index) => (
+      {segments.map((segment: Segment, index) => (
         <SegmentCard key={index}>
           <h2>{segment.name}</h2>
           <p>ベストタイム: {segment.bestTime}</p>

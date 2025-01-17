@@ -1,8 +1,8 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import { AccessibilityProvider } from '../components/common/AccessibilityProvider';
-import App from '../App';
+import { AccessibilityProvider } from '@/components/common/AccessibilityProvider';
+import App from '@/App';
 import '@testing-library/jest-dom';
 
 // React.lazyのモック実装を簡略化
@@ -11,8 +11,8 @@ jest.mock('react', () => {
   return {
     ...actualReact,
     lazy: <T extends React.ComponentType<any>>(fn: () => Promise<{ default: T }>) => {
-      const Component = actualReact.forwardRef<React.ComponentRef<T>, React.ComponentPropsWithoutRef<T>>(
-        (props: React.ComponentPropsWithoutRef<T>, ref: React.ForwardedRef<T>) => {
+      const Component = actualReact.forwardRef<React.ElementRef<T>, React.ComponentPropsWithoutRef<T>>(
+        (props: React.ComponentPropsWithoutRef<T>, ref: React.ForwardedRef<React.ElementRef<T>>) => {
         const [Resolved, setResolved] = React.useState<T | undefined>();
 
         React.useEffect(() => {

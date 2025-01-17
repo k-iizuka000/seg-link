@@ -8,7 +8,7 @@ import isPropValid from '@emotion/is-prop-valid';
 const Dashboard = React.lazy(() => import('./components/Dashboard'));
 const ActivityDetail = React.lazy(() => import('./components/ActivityDetail'));
 const AdvancedSearch = React.lazy(() => import('./components/AdvancedSearch'));
-const TemplateManager = React.lazy(() => import('./components/TemplateManager'));
+const TemplateManager = React.lazy(() => import('./components/TemplateManager').then(module => ({ default: module.default })));
 const NotFound = React.lazy(() => import('./components/NotFound'));
 const Login = React.lazy(() => import('./components/Login'));
 const Segments = React.lazy(() => import('./components/Segments'));

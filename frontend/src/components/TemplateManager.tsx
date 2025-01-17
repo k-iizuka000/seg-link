@@ -2,8 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import styled from 'styled-components';
 import axios from 'axios';
-import { Button, Input, SearchBar } from '../common/components';
-import { useTemplates } from '../hooks/useTemplates';
+import { Button, SearchBar } from '@/common/components';
+import { useTemplates } from '@/hooks/useTemplates';
+import { useQuery } from 'react-query';
+import { fetchTemplates } from '@/api/client';
+import { Template } from '@/types';
 
 const TemplateManagerContainer = styled.div`
   padding: 2rem;
@@ -12,7 +15,7 @@ const TemplateManagerContainer = styled.div`
   margin: 0 auto;
 `;
 
-const TemplateCard = styled.div`
+const TemplateCard = styled.div<{ template: Template }>`
   background: white;
   padding: 1rem;
   border-radius: 8px;
@@ -118,7 +121,11 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
   return createPortal(modalContent, document.body);
 };
 
-const TemplateManager: React.FC = () => {
+type TemplateProps = {
+  template?: Template;
+};
+
+const TemplateManager: React.FC<TemplateProps> = ({ template }) => {
   const [newTemplateName, setNewTemplateName] = useState('');
   const [newTemplateDescription, setNewTemplateDescription] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -152,12 +159,22 @@ const TemplateManager: React.FC = () => {
   const handleCreateTemplate = (e: React.FormEvent) => {
     e.preventDefault();
     // 新規テンプレート作成ロジックをここに追加
-    console.log('新規テンプレート作成:', newTemplateName, newTemplateDescription);
+    apiClient.post('/api/templates', {
+      name: newTemplateName,
+      description: newTemplateDescription,
+    })
+    .then(response => {
+      console.log('テンプレートが作成されました:', response.data);
+      // 作成後の処理をここに追加
+    })
+    .catch(error => {
+      console.error('テンプレート作成エラー:', error);
+    });
   };
 
-  const handleEdit = (template: { name: string; description: string }) => {
+  const handleEdit = (template: Template) => {
     setEditTemplateName(template.name);
-    setEditTemplateDescription(template.description);
+    setEditTemplateDescription(template.templateJson.description || '');
     setIsModalOpen(true);
   };
 
@@ -190,11 +207,10 @@ const TemplateManager: React.FC = () => {
     }
   };
 
-  const templates = [
-    { name: 'Summer Ride', description: 'Light clothing, carbon wheels' },
-    { name: 'Winter Ride', description: 'Heavy clothing, aluminum wheels' },
-    // ダミーデータを追加
-  ];
+  const { data: templates, error, isLoading } = useQuery('templates', () => fetchTemplates('your_access_token_here'));
+
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error loading templates</div>;
 
   return (
     <TemplateManagerContainer>
@@ -221,16 +237,12 @@ const TemplateManager: React.FC = () => {
         />
         <Button type="submit">新規作成</Button>
       </NewTemplateForm>
-      {templates.map((template, index) => (
-        <TemplateCard key={index}>
-          <div>
-            <h2>{template.name}</h2>
-            <p>{template.description}</p>
-          </div>
-          <div>
-            <Button onClick={() => handleEdit(template)}>編集</Button>
-            <Button onClick={() => handleDelete(template.name)}>削除</Button>
-          </div>
+      {templates && templates.map((template: Template) => (
+        <TemplateCard key={template.id} template={template}>
+          <h3>{template.name}</h3>
+          <p>{template.templateJson.description || ''}</p>
+          <Button onClick={() => handleEdit(template)}>Edit</Button>
+          <Button onClick={() => handleDelete(template.name)}>Delete</Button>
         </TemplateCard>
       ))}
       
