@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ThemeProvider, StyleSheetManager } from 'styled-components';
 import { LoadingSpinner } from './components/common/LoadingSpinner';
 import isPropValid from '@emotion/is-prop-valid';
@@ -28,23 +28,51 @@ const theme = {
   },
 };
 
+// 認証状態に応じたリダイレクト制御を行うコンポーネント
+const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const location = useLocation();
+  const isAuthenticated = !!localStorage.getItem('authToken');
+  
+  if (!isAuthenticated && location.pathname !== '/callback') {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return <>{children}</>;
+};
+
+const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const isAuthenticated = !!localStorage.getItem('authToken');
+  
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <>{children}</>;
+};
+
 const App: React.FC = () => {
   return (
     <StyleSheetManager shouldForwardProp={isPropValid}>
       <ThemeProvider theme={theme}>
         <Suspense fallback={<LoadingSpinner />}>
           <Routes>
-            <Route path="/" element={<Login />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/activity/:id" element={<ActivityDetail />} />
-            <Route path="/search" element={<AdvancedSearch />} />
-            <Route path="/templates" element={<TemplateManager />} />
-            <Route path="/segments" element={<Segments />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/segment-list" element={<SegmentList />} />
-            <Route path="/search-results" element={<SearchResults />} />
-            <Route path="/template-editor" element={<TemplateEditor />} />
-            <Route path="/auth/callback" element={<Callback />} />
+            {/* パブリックルート */}
+            <Route path="/" element={<PublicRoute><Login /></PublicRoute>} />
+            <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+            <Route path="/callback" element={<Callback />} />
+
+            {/* プライベートルート */}
+            <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+            <Route path="/activity/:id" element={<PrivateRoute><ActivityDetail /></PrivateRoute>} />
+            <Route path="/search" element={<PrivateRoute><AdvancedSearch /></PrivateRoute>} />
+            <Route path="/templates" element={<PrivateRoute><TemplateManager /></PrivateRoute>} />
+            <Route path="/segments" element={<PrivateRoute><Segments /></PrivateRoute>} />
+            <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
+            <Route path="/segment-list" element={<PrivateRoute><SegmentList /></PrivateRoute>} />
+            <Route path="/search-results" element={<PrivateRoute><SearchResults /></PrivateRoute>} />
+            <Route path="/template-editor" element={<PrivateRoute><TemplateEditor /></PrivateRoute>} />
+            
+            {/* 404ページ */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
