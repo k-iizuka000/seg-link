@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Button, SearchBar } from '@/common/components';
-import { useTemplates } from '@/hooks/useTemplates';
 import { fetchTemplates } from '@/api/client';
 import { Template } from '@/types';
 import { useNavigate } from 'react-router-dom';
@@ -28,21 +27,6 @@ const TemplateCard = styled.div<{ template: Template }>`
 
   &:focus-within {
     outline: 2px solid #007bff;
-  }
-`;
-
-const StyledButton = styled.button`
-  background-color: #007bff;
-  color: white;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-
-  &:hover, &:focus {
-    background-color: #0056b3;
-    outline: 2px solid #0056b3;
   }
 `;
 
@@ -122,11 +106,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
   return createPortal(modalContent, document.body);
 };
 
-type TemplateProps = {
-  template?: Template;
-};
-
-const TemplateManager: React.FC<TemplateProps> = ({ template }) => {
+const TemplateManager: React.FC = () => {
   const [newTemplateName, setNewTemplateName] = useState('');
   const [newTemplateDescription, setNewTemplateDescription] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -248,14 +228,15 @@ const TemplateManager: React.FC<TemplateProps> = ({ template }) => {
         <TemplateCard key={template.id} template={template}>
           <h3>{template.name}</h3>
           <p>{template.templateJson.description || ''}</p>
-          <Button onClick={() => handleEdit(template)}>Edit</Button>
-          <Button onClick={() => handleDelete(template.name)}>Delete</Button>
+          <div>
+            <Button onClick={() => handleEdit(template)}>編集</Button>
+            <Button onClick={() => handleDelete(template.name)}>削除</Button>
+          </div>
         </TemplateCard>
       ))}
-      
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
         <ModalContent>
-          <h2>テンプレート編集</h2>
+          <h2>テンプレートの編集</h2>
           <InputField
             type="text"
             placeholder="テンプレート名"
@@ -272,13 +253,12 @@ const TemplateManager: React.FC<TemplateProps> = ({ template }) => {
           <Button onClick={() => setIsModalOpen(false)}>キャンセル</Button>
         </ModalContent>
       </Modal>
-
       <Modal isOpen={isConfirmOpen} onClose={() => setIsConfirmOpen(false)}>
         <ConfirmContent>
-          <h2>削除確認</h2>
-          <p>本当に削除しますか？</p>
-          <Button onClick={confirmDelete}>はい</Button>
-          <Button onClick={() => setIsConfirmOpen(false)}>いいえ</Button>
+          <h2>削除の確認</h2>
+          <p>本当にこのテンプレートを削除しますか？</p>
+          <Button onClick={confirmDelete}>削除</Button>
+          <Button onClick={() => setIsConfirmOpen(false)}>キャンセル</Button>
         </ConfirmContent>
       </Modal>
     </TemplateManagerContainer>
