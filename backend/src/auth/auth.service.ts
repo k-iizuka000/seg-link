@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import axios from 'axios';
 import * as crypto from 'crypto';
+import { StravaTokenResponse } from '../types/strava';
 
 @Injectable()
 export class AuthService {
@@ -28,7 +29,7 @@ export class AuthService {
     return decrypted;
   }
 
-  async storeStravaTokens(userId: string, accessToken: string, refreshToken: string, expiresAt: Date) {
+  async storeStravaTokens(userId: number, accessToken: string, refreshToken: string, expiresAt: Date, athleteId: number) {
     const encryptedAccessToken = this.encryptToken(accessToken);
     const encryptedRefreshToken = this.encryptToken(refreshToken);
     
@@ -38,13 +39,14 @@ export class AuthService {
         accessToken: encryptedAccessToken,
         refreshToken: encryptedRefreshToken,
         expiresAt,
+        athleteId,
       },
       create: {
         userId,
         accessToken: encryptedAccessToken,
         refreshToken: encryptedRefreshToken,
         expiresAt,
-        athleteId: 0, // Will be updated after first API call
+        athleteId,
         premium: false,
         summit: false,
         createdAtStrava: new Date(),
@@ -54,7 +56,7 @@ export class AuthService {
     });
   }
 
-  async getStravaTokens(userId: string) {
+  async getStravaTokens(userId: number) {
     const stravaAuth = await this.prisma.stravaAuth.findUnique({
       where: { userId },
       select: {
@@ -75,11 +77,12 @@ export class AuthService {
     };
   }
 
-  async refreshStravaToken(userId: string) {
+  async refreshStravaToken(userId: number) {
     const stravaAuth = await this.prisma.stravaAuth.findUnique({
       where: { userId },
       select: {
         refreshToken: true,
+        athleteId: true,
       },
     });
 
@@ -89,7 +92,7 @@ export class AuthService {
 
     const decryptedRefreshToken = this.decryptToken(stravaAuth.refreshToken);
     
-    const response = await axios.post('https://www.strava.com/oauth/token', {
+    const response = await axios.post<StravaTokenResponse>('https://www.strava.com/oauth/token', {
       client_id: process.env.STRAVA_CLIENT_ID,
       client_secret: process.env.STRAVA_CLIENT_SECRET,
       refresh_token: decryptedRefreshToken,
@@ -101,7 +104,8 @@ export class AuthService {
       userId,
       access_token,
       refresh_token,
-      new Date(expires_at * 1000)
+      new Date(expires_at * 1000),
+      stravaAuth.athleteId
     );
 
     return {
@@ -128,26 +132,42 @@ export class AuthService {
   }
 
   async exchangeStravaCode(code: string) {
-    const response = await axios.post('https://www.strava.com/oauth/token', {
+    const response = await axios.post<StravaTokenResponse>('https://www.strava.com/oauth/token', {
       client_id: process.env.STRAVA_CLIENT_ID,
       client_secret: process.env.STRAVA_CLIENT_SECRET,
       code,
-      grant_type: 'authorization_code',
+      grant_type: 'authorization_code'
     });
 
     const { access_token, refresh_token, expires_at, athlete } = response.data;
-    await this.storeStravaTokens(
-      athlete.id.toString(),
+
+    // Create or update user
+    const user = await this.prisma.user.upsert({
+      where: { email: athlete.email },
+      update: {
+        name: athlete.firstname + ' ' + athlete.lastname,
+      },
+      create: {
+        email: athlete.email,
+        name: athlete.firstname + ' ' + athlete.lastname,
+      },
+    });
+
+    // Store tokens
+    const stravaAuth = await this.storeStravaTokens(
+      user.id,
       access_token,
       refresh_token,
-      new Date(expires_at * 1000)
+      new Date(expires_at * 1000),
+      athlete.id
     );
 
     return {
+      user,
+      stravaAuth,
       accessToken: access_token,
       refreshToken: refresh_token,
       expiresAt: new Date(expires_at * 1000),
-      athlete,
     };
   }
 }

@@ -15,10 +15,12 @@ model User {
   id    Int     @id @default(autoincrement())
   email String  @unique
   name  String?
+  stravaAuth StravaAuth?
 }
 
 model StravaAuth {
-  userId         String  @id
+  userId         Int     @id
+  user           User    @relation(fields: [userId], references: [id])
   accessToken    String
   refreshToken   String
   expiresAt      DateTime
