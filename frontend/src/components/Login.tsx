@@ -33,20 +33,28 @@ const Description = styled.p`
   line-height: 1.5;
 `;
 
-const StravaButton = styled.a`
+const StravaButton = styled.button`
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: center;
+  gap: 0.75rem;
   background-color: #fc4c02;
   color: white;
   padding: 0.75rem 1.5rem;
   border-radius: 4px;
-  text-decoration: none;
+  border: none;
   font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
   transition: background-color 0.2s;
 
   &:hover {
     background-color: #e34402;
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(252, 76, 2, 0.3);
   }
 
   img {
@@ -85,22 +93,21 @@ interface LoginProps {
 
 const Login: React.FC<LoginProps> = ({ isLoading, error }) => {
   const handleStravaLogin = () => {
-    // Stravaの認証URLにリダイレクト
     const clientId = import.meta.env.VITE_STRAVA_CLIENT_ID;
-    console.log('VITE_STRAVA_CLIENT_ID:', clientId); // デバッグ用
-    console.log('import.meta.env:', import.meta.env); // すべての環境変数を表示
-    
-    const redirectUri = `${window.location.origin}/auth/callback`;
+    const redirectUri = import.meta.env.VITE_STRAVA_CALLBACK_URL;
     const scope = 'read,activity:read_all,profile:read_all';
     
-    window.location.href = `https://www.strava.com/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}`;
+    if (!clientId || !redirectUri) {
+      console.error('Strava configuration is missing');
+      return;
+    }
+    
+    window.location.href = `https://www.strava.com/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&approval_prompt=force`;
   };
 
-  // ログイン状態の永続化
   useEffect(() => {
     const token = localStorage.getItem('authToken');
     if (token) {
-      // トークンが存在する場合、ユーザーをダッシュボードにリダイレクト
       window.location.href = '/dashboard';
     }
   }, []);
@@ -116,7 +123,7 @@ const Login: React.FC<LoginProps> = ({ isLoading, error }) => {
         {isLoading ? (
           <LoadingSpinner />
         ) : (
-          <StravaButton onClick={handleStravaLogin}>
+          <StravaButton onClick={handleStravaLogin} type="button">
             <img src="/strava-logo.png" alt="Strava logo" />
             Stravaでログイン
           </StravaButton>
