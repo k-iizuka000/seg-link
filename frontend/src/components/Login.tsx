@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import styled from 'styled-components';
 
 const LoginContainer = styled.div`
@@ -34,17 +34,17 @@ const Description = styled.p`
 `;
 
 const StravaButton = styled.button`
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
+  gap: 10px;
   background-color: #fc4c02;
   color: white;
-  padding: 0.75rem 1.5rem;
-  border-radius: 4px;
   border: none;
-  font-weight: bold;
+  border-radius: 4px;
+  padding: 12px 24px;
   font-size: 1rem;
+  font-weight: bold;
   cursor: pointer;
   transition: background-color 0.2s;
 
@@ -52,38 +52,9 @@ const StravaButton = styled.button`
     background-color: #e34402;
   }
 
-  &:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(252, 76, 2, 0.3);
-  }
-
   img {
-    width: 24px;
     height: 24px;
   }
-`;
-
-const LoadingSpinner = styled.div`
-  border: 3px solid #f3f3f3;
-  border-top: 3px solid #fc4c02;
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  animation: spin 1s linear infinite;
-  margin: 0 auto;
-
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-`;
-
-const ErrorMessage = styled.div`
-  color: #dc3545;
-  margin-top: 1rem;
-  padding: 0.5rem;
-  border-radius: 4px;
-  background-color: #f8d7da;
 `;
 
 interface LoginProps {
@@ -93,43 +64,22 @@ interface LoginProps {
 
 const Login: React.FC<LoginProps> = ({ isLoading, error }) => {
   const handleStravaLogin = () => {
-    const clientId = import.meta.env.VITE_STRAVA_CLIENT_ID;
-    const redirectUri = import.meta.env.VITE_STRAVA_CALLBACK_URL;
-    const scope = 'read,activity:read_all,profile:read_all';
-    
-    if (!clientId || !redirectUri) {
-      console.error('Strava configuration is missing');
-      return;
-    }
-    
-    window.location.href = `https://www.strava.com/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&approval_prompt=force`;
+    // TODO: Implement Strava OAuth login
+    console.log('Strava login clicked');
   };
-
-  useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      window.location.href = '/dashboard';
-    }
-  }, []);
 
   return (
     <LoginContainer>
       <LoginCard>
-        <Title>SegLink</Title>
+        <Title>Stravaと連携する</Title>
         <Description>
           Stravaアカウントでログインして、あなたのセグメントを管理・分析しましょう。
         </Description>
-        
-        {isLoading ? (
-          <LoadingSpinner />
-        ) : (
-          <StravaButton onClick={handleStravaLogin} type="button">
-            <img src="/strava-logo.png" alt="Strava logo" />
-            Stravaでログイン
-          </StravaButton>
-        )}
-
-        {error && <ErrorMessage>{error}</ErrorMessage>}
+        <StravaButton onClick={handleStravaLogin} disabled={isLoading}>
+          <img src="/strava-logo_x2.png" alt="Strava logo" />
+          {isLoading ? '接続中...' : 'Stravaで始める'}
+        </StravaButton>
+        {error && <p style={{ color: 'red', marginTop: '1rem' }}>{error}</p>}
       </LoginCard>
     </LoginContainer>
   );

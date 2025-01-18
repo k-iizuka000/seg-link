@@ -67,20 +67,20 @@ export class AuthController {
   }
 
   @Get('strava/refresh')
-  async refreshStravaToken(@Query('refresh_token') refreshToken: string) {
-    if (!refreshToken) {
+  async refreshStravaToken(@Query('user_id') userId: string) {
+    if (!userId) {
       throw new HttpException(
         {
           status: HttpStatus.BAD_REQUEST,
-          error: 'Missing refresh token',
-          message: 'Refresh token is required',
+          error: 'Missing user ID',
+          message: 'User ID is required',
         },
         HttpStatus.BAD_REQUEST,
       );
     }
 
     try {
-      const newTokens = await this.authService.refreshStravaToken(refreshToken);
+      const newTokens = await this.authService.refreshStravaToken(parseInt(userId, 10));
       return newTokens;
     } catch (error) {
       if (axios.isAxiosError(error)) {
