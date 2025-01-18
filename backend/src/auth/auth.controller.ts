@@ -1,36 +1,65 @@
-import { Controller, Get, Query, Req, Res } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { Response } from 'express';
+import { Controller, Get, Query, Req, UseGuards } from '@nestjs/common';
+import { Request } from 'express';
+import { AuthService } from '../services/auth.service';
+import { StravaService } from '../services/strava.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { User } from '@prisma/client';
+
+interface StravaAuthResponse {
+  url: string;
+}
+
+interface StravaCallbackResponse {
+  token: string;
+}
+
+interface StravaStatusResponse {
+  connected: boolean;
+  lastSync: Date | null;
+  activityCount: number;
+}
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly stravaService: StravaService,
+  ) {}
 
-  @Get('strava/login')
-  async stravaLogin(@Res() res: Response) {
-    const stravaAuthUrl = `https://www.strava.com/oauth/authorize?client_id=${process.env.STRAVA_CLIENT_ID}&response_type=code&redirect_uri=${process.env.STRAVA_REDIRECT_URI}&scope=read,activity:read_all`;
-    res.redirect(stravaAuthUrl);
+  @Get('strava')
+  async getStravaAuthUrl(): Promise<StravaAuthResponse> {
+    const url = await this.stravaService.getAuthorizationUrl();
+    return { url };
   }
 
   @Get('strava/callback')
-  async stravaCallback(@Query('code') code: string) {
-    // TODO-AUTH-1: Implement proper error handling and validation
+  async handleStravaCallback(@Query('code') code: string): Promise<StravaCallbackResponse> {
     try {
-      const tokens = await this.authService.exchangeStravaCode(code);
-      return tokens;
+      const tokenData = await this.stravaService.exchangeToken(code);
+      const user = await this.authService.upsertUser(tokenData.athlete);
+      const jwt = await this.authService.generateToken(user);
+
+      return {
+        token: jwt,
+      };
     } catch (error) {
+      console.error('Failed to handle Strava callback:', error);
       throw error;
     }
   }
 
-  @Get('strava/refresh')
-  async refreshStravaToken(@Query('refresh_token') refreshToken: string) {
-    // TODO-AUTH-1: Add authentication middleware and security checks
-    try {
-      const newTokens = await this.authService.refreshStravaToken(refreshToken);
-      return newTokens;
-    } catch (error) {
-      throw error;
+  @UseGuards(JwtAuthGuard)
+  @Get('strava/status')
+  async getStravaStatus(@Req() req: Request): Promise<StravaStatusResponse> {
+    const user = await this.authService.validateUser(req.user!.id);
+    if (!user) {
+      throw new Error('User not found');
     }
+
+    return {
+      connected: true,
+      lastSync: new Date(),
+      activityCount: 0,
+    };
   }
 }

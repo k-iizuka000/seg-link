@@ -14,60 +14,70 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
-const auth_service_1 = require("./auth.service");
+const auth_service_1 = require("../services/auth.service");
+const strava_service_1 = require("../services/strava.service");
+const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 let AuthController = class AuthController {
     authService;
-    constructor(authService) {
+    stravaService;
+    constructor(authService, stravaService) {
         this.authService = authService;
+        this.stravaService = stravaService;
     }
-    async stravaLogin(res) {
-        const stravaAuthUrl = `https://www.strava.com/oauth/authorize?client_id=${process.env.STRAVA_CLIENT_ID}&response_type=code&redirect_uri=${process.env.STRAVA_REDIRECT_URI}&scope=read,activity:read_all`;
-        res.redirect(stravaAuthUrl);
+    async getStravaAuthUrl() {
+        const url = await this.stravaService.getAuthorizationUrl();
+        return { url };
     }
-    async stravaCallback(code) {
-        // TODO-AUTH-1: Implement proper error handling and validation
+    async handleStravaCallback(code) {
         try {
-            const tokens = await this.authService.exchangeStravaCode(code);
-            return tokens;
+            const tokenData = await this.stravaService.exchangeToken(code);
+            const user = await this.authService.upsertUser(tokenData.athlete);
+            const jwt = await this.authService.generateToken(user);
+            return {
+                token: jwt,
+            };
         }
         catch (error) {
+            console.error('Failed to handle Strava callback:', error);
             throw error;
         }
     }
-    async refreshStravaToken(refreshToken) {
-        // TODO-AUTH-1: Add authentication middleware and security checks
-        try {
-            const newTokens = await this.authService.refreshStravaToken(refreshToken);
-            return newTokens;
+    async getStravaStatus(req) {
+        const user = await this.authService.validateUser(req.user.id);
+        if (!user) {
+            throw new Error('User not found');
         }
-        catch (error) {
-            throw error;
-        }
+        return {
+            connected: true,
+            lastSync: new Date(),
+            activityCount: 0,
+        };
     }
 };
 exports.AuthController = AuthController;
 __decorate([
-    (0, common_1.Get)('strava/login'),
-    __param(0, (0, common_1.Res)()),
+    (0, common_1.Get)('strava'),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
-], AuthController.prototype, "stravaLogin", null);
+], AuthController.prototype, "getStravaAuthUrl", null);
 __decorate([
     (0, common_1.Get)('strava/callback'),
     __param(0, (0, common_1.Query)('code')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
-], AuthController.prototype, "stravaCallback", null);
+], AuthController.prototype, "handleStravaCallback", null);
 __decorate([
-    (0, common_1.Get)('strava/refresh'),
-    __param(0, (0, common_1.Query)('refresh_token')),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Get)('strava/status'),
+    __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
-], AuthController.prototype, "refreshStravaToken", null);
+], AuthController.prototype, "getStravaStatus", null);
 exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)('auth'),
-    __metadata("design:paramtypes", [auth_service_1.AuthService])
+    __metadata("design:paramtypes", [auth_service_1.AuthService,
+        strava_service_1.StravaService])
 ], AuthController);

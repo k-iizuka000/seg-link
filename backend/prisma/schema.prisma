@@ -12,20 +12,72 @@ datasource db {
 }
 
 model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
+  id              String      @id @default(uuid())
+  stravaId        String      @unique
+  name            String
+  email           String      @unique
+  accessToken     String
+  refreshToken    String
+  tokenExpiresAt  DateTime
+  weight          Float?
+  templates       Template[]
+  activities      Activity[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 }
 
-model StravaAuth {
-  userId         String  @id
-  accessToken    String
-  refreshToken   String
-  expiresAt      DateTime
-  athleteId      Int
-  premium        Boolean
-  summit         Boolean
-  createdAtStrava DateTime
-  updatedAtStrava DateTime
-  badgeTypeId    Int
+model Template {
+  id        String   @id @default(uuid())
+  userId    String
+  name      String
+  clothing  String
+  wheels    String
+  wind      String
+  weight    Float
+  notes     String?
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Activity {
+  id                String    @id @default(uuid())
+  userId           String
+  stravaId         String    @unique
+  name             String
+  distance         Float
+  movingTime       Int
+  elapsedTime      Int
+  type             String
+  startDate        DateTime
+  totalElevationGain Float
+  averageSpeed     Float?
+  maxSpeed         Float?
+  averageWatts     Float?
+  kilojoules       Float?
+  averageHeartrate Float?
+  maxHeartrate     Float?
+  clothing         String?
+  wheels           String?
+  wind             String?
+  weight           Float?
+  user             User      @relation(fields: [userId], references: [id])
+  segments         Segment[]
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model Segment {
+  id                String     @id @default(uuid())
+  stravaId         String     @unique
+  name             String
+  distance         Float
+  averageGrade     Float
+  maximumGrade     Float
+  elevationHigh    Float
+  elevationLow     Float
+  elevationDifference Float
+  activities       Activity[]
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
 }

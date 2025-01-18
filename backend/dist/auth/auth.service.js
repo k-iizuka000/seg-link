@@ -14,100 +14,67 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
-const prisma_service_1 = require("src/prisma/prisma.service");
-const axios_1 = __importDefault(require("axios"));
+const prisma_service_1 = require("../prisma/prisma.service");
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 let AuthService = class AuthService {
     prisma;
     constructor(prisma) {
         this.prisma = prisma;
     }
-    encryptToken(token) {
-        // TODO: Implement proper encryption using environment secret
-        return Buffer.from(token).toString('base64');
-    }
-    decryptToken(encryptedToken) {
-        // TODO: Implement proper decryption using environment secret
-        return Buffer.from(encryptedToken, 'base64').toString('utf-8');
-    }
-    async storeStravaTokens(userId, accessToken, refreshToken) {
-        const encryptedAccessToken = this.encryptToken(accessToken);
-        const encryptedRefreshToken = this.encryptToken(refreshToken);
-        return await this.prisma.stravaAuth.upsert({
-            where: { userId },
-            update: {
-                accessToken: encryptedAccessToken,
-                refreshToken: encryptedRefreshToken,
-                expiresAt: new Date(Date.now() + 21600 * 1000), // 6 hours
-            },
-            create: {
-                userId,
-                accessToken: encryptedAccessToken,
-                refreshToken: encryptedRefreshToken,
-                expiresAt: new Date(Date.now() + 21600 * 1000), // 6 hours
-                athleteId: 0, // Will be updated after first API call
-                premium: false,
-                summit: false,
-                createdAtStrava: new Date(),
-                updatedAtStrava: new Date(),
-                badgeTypeId: 0,
-            },
+    async handleStravaCallback(code) {
+        const tokenResponse = await this.getStravaToken(code);
+        const { athlete } = tokenResponse;
+        const existingUser = await this.prisma.user.findUnique({
+            where: { stravaId: athlete.id.toString() },
         });
-    }
-    async getStravaTokens(userId) {
-        const stravaAuth = await this.prisma.stravaAuth.findUnique({
-            where: { userId },
-            select: {
-                accessToken: true,
-                refreshToken: true,
-            },
-        });
-        return stravaAuth;
-    }
-    async refreshStravaToken(userId) {
-        const stravaAuth = await this.prisma.stravaAuth.findUnique({
-            where: { userId },
-            select: {
-                refreshToken: true,
-            },
-        });
-        if (!stravaAuth || !stravaAuth.refreshToken) {
-            throw new Error('Refresh token not found');
+        if (existingUser) {
+            const user = await this.prisma.user.update({
+                where: { id: existingUser.id },
+                data: {
+                    accessToken: tokenResponse.access_token,
+                    refreshToken: tokenResponse.refresh_token,
+                    tokenExpiresAt: new Date(tokenResponse.expires_at * 1000),
+                },
+            });
+            return user;
         }
-        const decryptedRefreshToken = this.decryptToken(stravaAuth.refreshToken);
-        // TODO: Implement actual Strava API call to refresh token
-        const newTokens = {
-            access_token: 'new_access_token',
-            refresh_token: 'new_refresh_token',
-            expires_in: 21600,
-        };
-        await this.storeStravaTokens(userId, newTokens.access_token, newTokens.refresh_token);
-        return {
-            accessToken: newTokens.access_token,
-            refreshToken: newTokens.refresh_token,
-            expiresIn: newTokens.expires_in,
-        };
+        const user = await this.prisma.user.create({
+            data: {
+                stravaId: athlete.id.toString(),
+                name: `${athlete.firstname} ${athlete.lastname}`,
+                email: athlete.email,
+                accessToken: tokenResponse.access_token,
+                refreshToken: tokenResponse.refresh_token,
+                tokenExpiresAt: new Date(tokenResponse.expires_at * 1000),
+            },
+        });
+        return user;
     }
-    async validateStravaToken(token) {
-        // TODO: Implement actual Strava API call to validate token
-        // For now, just check if token exists and is not empty
-        if (!token || token.trim().length === 0) {
-            throw new Error('Invalid token');
-        }
-        return true;
-    }
-    async exchangeStravaCode(code) {
-        const response = await axios_1.default.post('https://www.strava.com/oauth/token', null, {
-            params: {
+    async getStravaToken(code) {
+        const response = await fetch('https://www.strava.com/oauth/token', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
                 client_id: process.env.STRAVA_CLIENT_ID,
                 client_secret: process.env.STRAVA_CLIENT_SECRET,
-                code: code,
-                grant_type: 'authorization_code'
-            }
+                code,
+                grant_type: 'authorization_code',
+            }),
         });
-        const { access_token, refresh_token, athlete } = response.data;
-        // Store tokens in the database
-        await this.storeStravaTokens(athlete.id.toString(), access_token, refresh_token);
-        return { access_token, refresh_token };
+        if (!response.ok) {
+            throw new Error('Failed to get Strava token');
+        }
+        return response.json();
+    }
+    generateToken(user) {
+        return jsonwebtoken_1.default.sign({ userId: user.id }, process.env.JWT_SECRET, {
+            expiresIn: '7d',
+        });
+    }
+    verifyToken(token) {
+        return jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
     }
 };
 exports.AuthService = AuthService;

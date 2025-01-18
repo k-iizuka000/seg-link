@@ -1,84 +1,55 @@
-import React, { Suspense } from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { ThemeProvider, StyleSheetManager } from 'styled-components';
-import { LoadingSpinner } from './components/common/LoadingSpinner';
-import isPropValid from '@emotion/is-prop-valid';
-import Callback from './components/Callback';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider } from './contexts/AuthContext';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { StravaLogin } from './components/auth/StravaLogin';
+import { StravaCallback } from './components/auth/StravaCallback';
+import { Dashboard } from './components/dashboard/Dashboard';
+import { SegmentList } from './components/segments/SegmentList';
+import { SegmentDetail } from './components/segments/SegmentDetail';
 
-// Lazy load components
-const Dashboard = React.lazy(() => import('./components/Dashboard'));
-const ActivityDetail = React.lazy(() => import('./components/ActivityDetail'));
-const AdvancedSearch = React.lazy(() => import('./components/AdvancedSearch'));
-const TemplateManager = React.lazy(() => import('./components/TemplateManager').then(module => ({ default: module.default })));
-const NotFound = React.lazy(() => import('./components/NotFound'));
-const Login = React.lazy(() => import('./components/Login'));
-const Segments = React.lazy(() => import('./components/Segments'));
-const Profile = React.lazy(() => import('./components/Profile'));
-const SegmentList = React.lazy(() => import('./components/dashboard/SegmentList'));
-const SearchResults = React.lazy(() => import('./components/SearchResults'));
-const TemplateEditor = React.lazy(() => import('./components/TemplateEditor'));
+const queryClient = new QueryClient();
 
-// Theme definition
-const theme = {
-  colors: {
-    primary: '#007bff',
-    secondary: '#0056b3',
-    background: '#f5f5f5',
-    text: '#333',
-  },
-};
-
-// 認証状態に応じたリダイレクト制御を行うコンポーネント
-const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const location = useLocation();
-  const isAuthenticated = !!localStorage.getItem('authToken');
-  
-  if (!isAuthenticated && location.pathname !== '/callback') {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
-  return <>{children}</>;
-};
-
-const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const isAuthenticated = !!localStorage.getItem('authToken');
-  
-  if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  return <>{children}</>;
-};
-
-const App: React.FC = () => {
+function App() {
   return (
-    <StyleSheetManager shouldForwardProp={isPropValid}>
-      <ThemeProvider theme={theme}>
-        <Suspense fallback={<LoadingSpinner />}>
-          <Routes>
-            {/* パブリックルート */}
-            <Route path="/" element={<PublicRoute><Login /></PublicRoute>} />
-            <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-            <Route path="/callback" element={<Callback />} />
-
-            {/* プライベートルート */}
-            <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-            <Route path="/activity/:id" element={<PrivateRoute><ActivityDetail /></PrivateRoute>} />
-            <Route path="/search" element={<PrivateRoute><AdvancedSearch /></PrivateRoute>} />
-            <Route path="/templates" element={<PrivateRoute><TemplateManager /></PrivateRoute>} />
-            <Route path="/segments" element={<PrivateRoute><Segments /></PrivateRoute>} />
-            <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
-            <Route path="/segment-list" element={<PrivateRoute><SegmentList /></PrivateRoute>} />
-            <Route path="/search-results" element={<PrivateRoute><SearchResults /></PrivateRoute>} />
-            <Route path="/template-editor" element={<PrivateRoute><TemplateEditor /></PrivateRoute>} />
-            
-            {/* 404ページ */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Suspense>
-      </ThemeProvider>
-    </StyleSheetManager>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <Router>
+          <div className="min-h-screen bg-gray-50">
+            <Routes>
+              <Route path="/login" element={<StravaLogin />} />
+              <Route path="/auth/callback" element={<StravaCallback />} />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/segments"
+                element={
+                  <ProtectedRoute>
+                    <SegmentList />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/segments/:id"
+                element={
+                  <ProtectedRoute>
+                    <SegmentDetail />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/" element={<StravaLogin />} />
+            </Routes>
+          </div>
+        </Router>
+      </AuthProvider>
+    </QueryClientProvider>
   );
-};
+}
 
 export default App;
