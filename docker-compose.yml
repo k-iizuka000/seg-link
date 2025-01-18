@@ -12,6 +12,8 @@ services:
       - "5173:5173"
     environment:
       - NODE_ENV=development
+      - VITE_HOST=0.0.0.0
+      - VITE_PORT=5173
     depends_on:
       - backend
 

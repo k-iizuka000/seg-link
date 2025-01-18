@@ -5,9 +5,9 @@ import { ApiResponse } from '../../types/api';
 import {
   ChartBarIcon,
   ClockIcon,
-  LocationMarkerIcon,
-  TrendingUpIcon,
-} from '@heroicons/react/outline';
+  MapPinIcon,
+  ArrowTrendingUpIcon,
+} from '@heroicons/react/24/outline';
 
 interface Segment {
   id: string;
@@ -81,7 +81,7 @@ export const SegmentDetail = () => {
           <dl className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
             <div className="sm:col-span-1">
               <dt className="text-sm font-medium text-gray-500 flex items-center">
-                <LocationMarkerIcon className="h-5 w-5 mr-2" />
+                <MapPinIcon className="h-5 w-5 mr-2" />
                 距離
               </dt>
               <dd className="mt-1 text-sm text-gray-900">
@@ -90,7 +90,7 @@ export const SegmentDetail = () => {
             </div>
             <div className="sm:col-span-1">
               <dt className="text-sm font-medium text-gray-500 flex items-center">
-                <TrendingUpIcon className="h-5 w-5 mr-2" />
+                <ArrowTrendingUpIcon className="h-5 w-5 mr-2" />
                 平均勾配
               </dt>
               <dd className="mt-1 text-sm text-gray-900">{segment.data.averageGrade.toFixed(1)}%</dd>

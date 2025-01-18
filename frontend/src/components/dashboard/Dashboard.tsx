@@ -2,10 +2,10 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import {
   ChartBarIcon,
-  ClipboardListIcon,
-  SearchIcon,
+  ClipboardIcon,
+  MagnifyingGlassIcon,
   UserIcon,
-} from '@heroicons/react/outline';
+} from '@heroicons/react/24/outline';
 
 export const Dashboard = () => {
   const { logout } = useAuth();
@@ -21,13 +21,13 @@ export const Dashboard = () => {
       name: 'テンプレート',
       description: '条件テンプレートを管理',
       href: '/templates',
-      icon: ClipboardListIcon,
+      icon: ClipboardIcon,
     },
     {
       name: '複合条件検索',
       description: '条件を組み合わせて検索',
       href: '/search',
-      icon: SearchIcon,
+      icon: MagnifyingGlassIcon,
     },
     {
       name: 'プロフィール',

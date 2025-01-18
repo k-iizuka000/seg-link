@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../api';
 import { ApiResponse } from '../../types/api';
-import { SearchIcon, SortAscendingIcon } from '@heroicons/react/outline';
+import { MagnifyingGlassIcon, ArrowsUpDownIcon } from '@heroicons/react/24/outline';
 
 interface Segment {
   id: string;
@@ -70,7 +70,7 @@ export const SegmentList = () => {
           <div className="flex-1">
             <div className="relative rounded-md shadow-sm">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <SearchIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
               </div>
               <input
                 type="text"
@@ -94,7 +94,7 @@ export const SegmentList = () => {
               >
                 <div className="flex items-center space-x-1">
                   <span>名前</span>
-                  <SortAscendingIcon className="h-4 w-4" />
+                  <ArrowsUpDownIcon className="h-4 w-4" />
                 </div>
               </th>
               <th
@@ -104,7 +104,7 @@ export const SegmentList = () => {
               >
                 <div className="flex items-center space-x-1">
                   <span>距離</span>
-                  <SortAscendingIcon className="h-4 w-4" />
+                  <ArrowsUpDownIcon className="h-4 w-4" />
                 </div>
               </th>
               <th
@@ -114,7 +114,7 @@ export const SegmentList = () => {
               >
                 <div className="flex items-center space-x-1">
                   <span>平均勾配</span>
-                  <SortAscendingIcon className="h-4 w-4" />
+                  <ArrowsUpDownIcon className="h-4 w-4" />
                 </div>
               </th>
               <th
@@ -124,7 +124,7 @@ export const SegmentList = () => {
               >
                 <div className="flex items-center space-x-1">
                   <span>挑戦回数</span>
-                  <SortAscendingIcon className="h-4 w-4" />
+                  <ArrowsUpDownIcon className="h-4 w-4" />
                 </div>
               </th>
               <th
@@ -134,7 +134,7 @@ export const SegmentList = () => {
               >
                 <div className="flex items-center space-x-1">
                   <span>自己ベスト</span>
-                  <SortAscendingIcon className="h-4 w-4" />
+                  <ArrowsUpDownIcon className="h-4 w-4" />
                 </div>
               </th>
             </tr>
