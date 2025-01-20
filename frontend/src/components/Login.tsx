@@ -64,8 +64,7 @@ interface LoginProps {
 
 const Login: React.FC<LoginProps> = ({ isLoading, error }) => {
   const handleStravaLogin = () => {
-    // TODO: Implement Strava OAuth login
-    console.log('Strava login clicked');
+    window.location.href = `${import.meta.env.VITE_API_URL}/auth/strava/login`;
   };
 
   return (
