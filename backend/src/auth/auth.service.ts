@@ -30,30 +30,47 @@ export class AuthService {
   }
 
   async storeStravaTokens(userId: number, accessToken: string, refreshToken: string, expiresAt: Date, athleteId: number) {
-    const encryptedAccessToken = this.encryptToken(accessToken);
-    const encryptedRefreshToken = this.encryptToken(refreshToken);
-    
-    return await this.prisma.stravaAuth.upsert({
-      where: { userId },
-      update: {
-        accessToken: encryptedAccessToken,
-        refreshToken: encryptedRefreshToken,
-        expiresAt,
-        athleteId,
-      },
-      create: {
+    try {
+      const encryptedAccessToken = this.encryptToken(accessToken);
+      const encryptedRefreshToken = this.encryptToken(refreshToken);
+      
+      const result = await this.prisma.stravaAuth.upsert({
+        where: { userId },
+        update: {
+          accessToken: encryptedAccessToken,
+          refreshToken: encryptedRefreshToken,
+          expiresAt,
+          athleteId,
+        },
+        create: {
+          userId,
+          accessToken: encryptedAccessToken,
+          refreshToken: encryptedRefreshToken,
+          expiresAt,
+          athleteId,
+          premium: false,
+          summit: false,
+          createdAtStrava: new Date(),
+          updatedAtStrava: new Date(),
+          badgeTypeId: 0,
+        },
+      });
+      
+      console.log('Strava tokens stored successfully:', {
         userId,
-        accessToken: encryptedAccessToken,
-        refreshToken: encryptedRefreshToken,
-        expiresAt,
         athleteId,
-        premium: false,
-        summit: false,
-        createdAtStrava: new Date(),
-        updatedAtStrava: new Date(),
-        badgeTypeId: 0,
-      },
-    });
+        expiresAt
+      });
+      
+      return result;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Error storing Strava tokens:', error);
+        throw new Error(`Failed to store Strava tokens: ${error.message}`);
+      }
+      console.error('Unknown error storing Strava tokens:', error);
+      throw new Error('Failed to store Strava tokens');
+    }
   }
 
   async getStravaTokens(userId: number) {
@@ -123,51 +140,106 @@ export class AuthService {
         },
       });
       return true;
-    } catch (error) {
+    } catch (error: unknown) {
       if (axios.isAxiosError(error) && error.response?.status === 401) {
         return false;
       }
-      throw error;
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Unknown error validating Strava token');
     }
   }
 
   async exchangeStravaCode(code: string) {
-    const response = await axios.post<StravaTokenResponse>('https://www.strava.com/oauth/token', {
-      client_id: process.env.STRAVA_CLIENT_ID,
-      client_secret: process.env.STRAVA_CLIENT_SECRET,
-      code,
-      grant_type: 'authorization_code'
-    });
+    let response;
+    try {
+      console.log('Exchanging Strava code:', code);
+      console.log('Using client ID:', process.env.STRAVA_CLIENT_ID);
+      console.log('Using client secret:', process.env.STRAVA_CLIENT_SECRET?.substring(0, 4) + '****');
+      console.log('TEST LOG: This is a test log message');
+      
+      const params = new URLSearchParams();
+      params.append('client_id', process.env.STRAVA_CLIENT_ID || '');
+      params.append('client_secret', process.env.STRAVA_CLIENT_SECRET || '');
+      params.append('code', code);
+      params.append('grant_type', 'authorization_code');
+
+      response = await axios.post<StravaTokenResponse>('https://www.strava.com/oauth/token', params, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      });
+
+      console.log('Strava token exchange successful:', response.data);
+    } catch (error: unknown) {
+      console.error('Strava token exchange failed:', error);
+      if (axios.isAxiosError(error)) {
+        console.error('Strava API error details:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          headers: error.response?.headers,
+          config: {
+            url: error.config?.url,
+            method: error.config?.method,
+            params: error.config?.params,
+            headers: error.config?.headers
+          }
+        });
+        throw new Error(`Token exchange failed: ${error.response?.data?.message || error.message}`);
+      }
+      if (error instanceof Error) {
+        throw new Error(`Token exchange failed: ${error.message}`);
+      }
+      throw new Error('Unknown error during token exchange');
+    }
 
     const { access_token, refresh_token, expires_at, athlete } = response.data;
+    let user;
+    let stravaAuth;
 
-    // Create or update user
-    const user = await this.prisma.user.upsert({
-      where: { email: athlete.email },
-      update: {
-        name: athlete.firstname + ' ' + athlete.lastname,
-      },
-      create: {
-        email: athlete.email,
-        name: athlete.firstname + ' ' + athlete.lastname,
-      },
-    });
+    try {
+      console.log('Creating/updating user with email:', athlete.email);
+      
+      // Create or update user
+      user = await this.prisma.user.upsert({
+        where: { stravaId: athlete.id },
+        update: {
+          name: athlete.firstname + ' ' + athlete.lastname,
+        },
+        create: {
+          stravaId: athlete.id,
+          name: athlete.firstname + ' ' + athlete.lastname,
+        },
+      });
 
-    // Store tokens
-    const stravaAuth = await this.storeStravaTokens(
-      user.id,
-      access_token,
-      refresh_token,
-      new Date(expires_at * 1000),
-      athlete.id
-    );
+      console.log('User created/updated successfully:', user);
 
-    return {
-      user,
-      stravaAuth,
+      // Store tokens
+      console.log('Storing Strava tokens for user:', user.id);
+      const stravaAuth = await this.storeStravaTokens(
+        user.id,
+        access_token,
+        refresh_token,
+        new Date(expires_at * 1000),
+        athlete.id
+      );
+
+      console.log('Strava tokens stored successfully:', stravaAuth);
+    } catch (error) {
+      console.error('Error during user creation/token storage:', error);
+      throw error;
+    }
+
+    const result = {
+      user: user,
+      stravaAuth: stravaAuth,
       accessToken: access_token,
       refreshToken: refresh_token,
       expiresAt: new Date(expires_at * 1000),
     };
+    
+    console.log('Returning exchange result:', result);
+    return result;
   }
 }
